@@ -1,1 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Pit and Waste Dumps Closure</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    body { margin: 0; font-family: 'Kommon Grotesk', Arial, sans-serif; background-color: #ffffff; color: #000000; }
 
+    /* Top banner */
+    .top-banner { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; margin: 0 5%; border-bottom: 1px solid #ddd; }
+    .logo { display: flex; align-items: center; }
+    .logo .lop { color: #CA1416; font-size: 42px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; margin-right: 10px; }
+    .logo .project-text { color: grey; font-size: 16px; font-weight: bold; line-height: 1.2; font-family: 'Arazati Clara Condensada', 'Arial Narrow', sans-serif; }
+    .top-banner nav a { margin-left: 20px; text-decoration: none; color: #000; font-size: 14px; font-family: 'Kommon Grotesk', Arial, sans-serif; }
+    .top-banner nav a:hover { text-decoration: underline; }
+    .search-icon { margin-left: 20px; font-size: 14px; cursor: pointer; }
+
+    /* Second banner */
+    .second-banner { background: #999; color: #ffffff; padding: 10px; font-weight: bold; text-align: left; position: relative; font-family: 'Kommon Grotesk', Arial, sans-serif; }
+    .second-banner h1.text { margin: 0 0 0 20%; font-size: 22px; font-weight: 700; }
+    .second-banner .subtext { margin-left: 20%; font-size: 16px; font-weight: normal; margin-top: 5px; }
+
+    /* Main body */
+    .main-body { padding: 20px; min-height: 400px; font-family: 'Kommon Grotesk', Arial, sans-serif; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 24px; }
+    .left-col { flex: 1; min-width: 0; max-width: calc(100% - 440px); display: flex; flex-direction: column; gap: 16px; }
+
+    /* Right table panel */
+    .panel { width: 400px; border: 1px solid #ccc; border-radius: 8px; padding: 10px; background: #fafafa; display: flex; flex-direction: column; gap: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 5px; text-align: center; font-weight: bold; }
+    .palered { background: #FFCCCC; }
+    .red { background: #FF7C80; }
+    .darkred { background: #FF0000; color:#fff; }
+    .orange { background: #FFE699; }
+    .yellow { background: #FFFF00; }
+    .green { background: #C5E0B4; }
+    .darkgreen { background: #00B050; color:#fff; }
+    .blue { background: #00B0F0; color:#fff; }
+    .purple { background: #7030A0; color:#fff; }
+
+    /* Controls */
+    .left-panel { width: 100%; border: 1px solid #ccc; border-radius: 8px; background: #fafafa; padding: 12px 14px; }
+    .left-panel .lp-banner { display:flex; justify-content: space-between; align-items:center; background: #efefef; border: 1px solid #ddd; border-radius: 6px; padding: 8px 10px; font-weight: 700; margin-bottom: 12px; }
+    #status { font-weight: 600; font-size: 12px; color: #2a6f2a; }
+    #status.bad { color: #CA1416; }
+    .left-panel .controls { display: flex; align-items: center; gap: 16px 24px; flex-wrap: nowrap; }
+    .control-group { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 16px 24px; flex: 1 1 auto; }
+    .control { display: grid; gap: 6px; }
+    .control label { font-weight: 600; font-size: 14px; }
+
+    /* Sliders */
+    input[type="range"] { width: 100%; height: 6px; background: #CA1416; border-radius: 999px; outline: none; accent-color: #CA1416; }
+    input[type="range"]::-ms-track { background: transparent; border-color: transparent; color: transparent; }
+    input[type="range"]::-webkit-slider-thumb { width: 16px; height: 16px; border-radius: 50%; background: #CA1416; border: 2px solid #fff; box-shadow: 0 0 0 1px #000000; }
+    input[type="range"]::-moz-range-track { background: #CA1416; height: 6px; border-radius: 999px; }
+    input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #CA1416; border: 2px solid #fff; box-shadow: 0 0 0 1px #CA1416; }
+
+    /* Buttons & toggle */
+    .actions { display: inline-flex; gap: 12px; align-items: center; flex-direction: row; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; border: 1px solid #bbb; background: #fff; cursor: pointer; font-weight: 600; }
+    .btn:hover { background: #f5f5f5; }
+    .toggle { display: inline-flex; align-items: center; gap: 10px; }
+    .toggle input { appearance: none; width: 40px; height: 22px; background: #ddd; border-radius: 999px; position: relative; outline: none; cursor: pointer; }
+    .toggle input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s ease; }
+    .toggle input:checked { background: #CA1416; }
+    .toggle input:checked::after { transform: translateX(18px); }
+
+    /* Plot containers */
+    .plot { position: relative; width: 100%; height: 100%; min-height: 640px; }
+    .plot-title{ padding:8px 10px; font-weight:700; border-bottom:1px solid #ddd; background:#efefef; display:flex; justify-content:space-between; align-items:center; }
+
+    /* Main 3-up grid under controls */
+    .main-grid{ width:100%; margin:0 auto; display:grid; gap:16px; grid-template-columns: minmax(0,1fr) minmax(0,1fr) 720px; }
+    .vpanel{ border:1px solid #ccc; border-radius:8px; background:#fafafa; min-height:655px; overflow:hidden; display:flex; flex-direction:column; }
+    .main-grid.two-panels{ grid-template-columns:minmax(0,1fr) 720px; }
+    .main-grid.two-panels #panel-2{ display:none; }
+
+    /* Bottom tables panel */
+    .tables-panel{ width:100%; max-width:1300px; margin:0 auto; border:1px solid #ccc; border-radius:8px; background:#fafafa; padding:10px; display:grid; gap:20px; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .main-body { flex-direction: column; }
+      .left-col { max-width: 100%; }
+      .panel { width: 100%; }
+      .control-group { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .plot { min-height: 420px; }
+    }
+    @media (max-width: 700px) { .control-group { grid-template-columns: 1fr; } }
+
+    /* Shift right panel down */
+    .main-body > .panel { margin-top: 125px; }
+    @media (max-width: 1200px) { .main-body > .panel { margin-top: 0; } }
+
+    /* Small helpers */
+    .rows-ctl{ display:inline-flex; gap:8px; align-items:center; font-weight:600; }
+    .id-input{ width:4.2em; text-transform:uppercase; }
+    .name-input{ width:100%; min-width:8em; text-align:left; font-weight:600; }
+      /* Hide Residual Assessment columns when toggled off */
+    #inputTable.hide-residual thead tr:first-child th:last-child { display: none; }
+    #inputTable.hide-residual thead tr:nth-child(2) th:nth-last-child(-n+4) { display: none; }
+    #inputTable.hide-residual tbody td:nth-last-child(-n+4) { display: none; }
+  </style>
+  <!-- External libs for plotting and xlsx parsing -->
+  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <div class="top-banner">
+    <div class="logo">
+      <div class="lop">LOP</div>
+      <div class="project-text">Large Open Pit<br>Project</div>
+    </div>
+    <nav>
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Sponsors</a>
+      <a href="#">Guidelines</a>
+      <a href="#">Webinars</a>
+      <a href="#">Projects</a>
+      <a href="#">News</a>
+      <a href="#">Contact us</a>
+      <span class="search-icon">🔍</span>
+    </nav>
+  </div>
+
+  <div class="second-banner">
+    <h1 class="text">Open Pit and Waste Dumps Closure</h1>
+    <div class="subtext">Residual Risk Rating (R3)</div>
+  </div>
+
+  <div class="main-body">
+    <!-- Controls panel -->            
+    <div class="left-panel">
+        <div class="lp-banner">Controls <span id="status"></span></div>
+
+        <div class="controls">
+            <!-- Left: sliders -->
+            <div class="control-group">
+                <div class="control">
+                    <label for="azimRange">Rotation</label>
+                    <input id="azimRange" type="range" min="-90" max="0" step="1" value="-30">
+                </div>
+                <div class="control">
+                    <label for="elevRange">Tilt</label>
+                    <input id="elevRange" type="range" min="1" max="89" step="1" value="15">
+                </div>
+                <div class="control">
+                    <label for="zoomRange">Zoom</label>
+                    <input id="zoomRange" type="range" min="-1" max="1" step="0.1" value="0">
+                </div>
+                <div class="control">
+                    <label for="panZRange">Pan Vertical</label>
+                    <input id="panZRange" type="range" min="-0.2" max="0.2" step="0.01" value="0">
+                </div>
+                
+            </div>
+
+            <!-- Right: buttons + toggle -->
+            <div class="actions">
+                <input id="fileInput" type="file" hidden>
+                <button class="btn" type="button" id="load-btn">
+                    <!-- file icon -->
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                    Load Data
+                </button>
+                
+                <label class="toggle">
+                    <input type="checkbox" id="comparative">
+                    <span>Comparative Assessment</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three vertical panels: Plot1, Plot2, Manual Table -->
+    <div class="main-grid" id="mainGrid">
+      <div class="vpanel" id="panel-1">
+        <div class="plot-title">Initial Assessment</div>
+        <div id="plot1" class="plot"></div>
+      </div>
+      <div class="vpanel" id="panel-2">
+        <div class="plot-title">Residual Assessment</div>
+        <div id="plot2" class="plot"></div>
+      </div>
+      <div class="vpanel" id="panel-3">
+        <div class="plot-title">
+          <span>Input Table</span>
+          <span class="rows-ctl">
+            <label for="manualCount">Rows:</label>
+            <select id="manualCount"></select>
+          </span>
+        </div>
+        <table id="inputTable">
+          <thead>
+            <tr>
+              <th rowspan="2">ID</th>
+              <th rowspan="2">Name</th>
+              <th colspan="4">Initial Assessment</th>
+              <th colspan="4">Residual Assessment</th>
+            </tr>
+            <tr>
+              <th>SCR</th><th>DCR</th><th>FCR</th><th>Score</th>
+              <th>SCR</th><th>DCR</th><th>FCR</th><th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="manualBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bottom panel with rating tables side-by-side -->
+    <div class="tables-panel">
+      <table>
+        <tr>
+          <th>Slope Condition Class Rating</th>
+          <th>Design Confidence Rating</th>
+          <th>Failure Consequence Rating</th>
+        </tr>
+        <tr><td class="red">V = 5</td><td class="red">VL = 4</td><td class="red">VH = 5</td></tr>
+        <tr><td class="palered">IV = 4</td><td class="palered">L = 4</td><td class="palered">H = 4</td></tr>
+        <tr><td class="orange">III = 3</td><td class="orange">M = 3</td><td class="orange">M = 3</td></tr>
+        <tr><td class="yellow">II = 2</td><td class="yellow">H = 2</td><td class="yellow">L = 2</td></tr>
+        <tr><td class="green">I = 1</td><td class="green">VH = 1</td><td class="green">VL = 1</td></tr>
+      </table>
+
+      <table>
+        <tr>
+          <th rowspan="2">ESR R³ Score</th>
+          <th colspan="2">Suggested TSR</th>
+        </tr>
+        <tr>
+          <th>FoS</th>
+          <th>PoF</th>
+        </tr>
+        <tr><td class="purple">80-100</td><td class="purple"> &gt; 2.0</td><td class="purple"> &lt; 0.5%</td></tr>
+        <tr><td class="darkred">60-79</td><td class="darkred"> &gt; 1.8</td><td class="darkred"> &lt; 0.75%</td></tr>
+        <tr><td class="yellow">30-59</td><td class="yellow"> &gt; 1.5</td><td class="yellow"> &lt; 1.0%</td></tr>
+        <tr><td class="darkgreen">10-29</td><td class="darkgreen"> &gt; 1.3</td><td class="darkgreen"> &lt; 1.5%</td></tr>
+        <tr><td class="blue">&lt;10</td><td class="blue"> &gt; 1.2</td><td class="blue"> &lt; 3%</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Plot + Table script -->
+  <script>
+    const statusEl = document.getElementById('status');
+    function status(msg, bad){ if(!statusEl) return; statusEl.textContent = msg; statusEl.classList.toggle('bad', !!bad); (console[bad?'error':'log']||console.log)('[status]', msg); }
+
+    window.addEventListener('DOMContentLoaded', ()=>{
+      if(!window.Plotly){ status('Plotly failed to load (likely blocked by network/CDN).', true); document.getElementById('plot1').textContent='Plotly failed to load.'; document.getElementById('plot2').textContent='Plotly failed to load.'; return; }
+      if(!window.XLSX){ status('SheetJS failed to load (likely blocked by network/CDN). Only demo will work.', true); }
+
+      const plotDivs = [document.getElementById('plot1'), document.getElementById('plot2')];
+      const fileInput = document.getElementById('fileInput');
+      const manualCount = document.getElementById('manualCount');
+      const manualBody = document.getElementById('manualBody');
+      const inputTable = document.getElementById('inputTable');
+      if (inputTable) inputTable.classList.add('hide-residual');
+      
+      const azimRange = document.getElementById('azimRange');
+      const elevRange = document.getElementById('elevRange');
+      const zoomRange = document.getElementById('zoomRange');
+      const panZRange = document.getElementById('panZRange');
+      
+
+      // click the file input from the Load button
+      document.getElementById('load-btn')?.addEventListener('click', ()=> fileInput?.click());
+
+      // Mouse-lock overlay for each plot
+      plotDivs.forEach(pd => {
+        const blocker = document.createElement('div');
+        blocker.style.position='absolute'; blocker.style.inset='0'; blocker.style.zIndex='10'; blocker.style.pointerEvents='auto'; blocker.style.background='transparent';
+        blocker.title = 'Mouse disabled; use the sliders to spin/tilt/zoom';
+        pd.appendChild(blocker);
+      });
+
+      // Defaults for view
+      const INIT_AZIM = -30, INIT_ELEV = 15, INIT_RADIUS = 0;
+      azimRange.value = String(INIT_AZIM);
+      elevRange.value = String(INIT_ELEV);
+      zoomRange.value = String(INIT_RADIUS);
+      panZRange.value = '0';
+      
+
+      // --- Category orders & scoring maps ---
+      const SCR_ORDER = ['I','II','III','IV','V'];
+      const DCR_ORDER = ['VL','VL-L','L','L-M','M','M-H','H','H-VH','VH'];
+      const FCR_ORDER = ['VL','L','M','H','VH'];
+      const DCR_SCORE_MAP = {VL:4, 'VL-L':4, L:4, 'L-M':3.5, M:3, 'M-H':2.5, H:2, 'H-VH':1.5, VH:1};
+      const DCR_PLOT = {VL:4.5, 'VL-L':4, L:3.5, 'L-M':3, M:2.5, 'M-H':2, H:1.5, 'H-VH':1, VH:0.5};
+      const DCR_PLOT_INV = new Map(Object.entries(DCR_PLOT).map(([k,v])=>[v, k]));
+      const FCR_SCORE_MAP = {VL:1, L:2, M:3, H:4, VH:5};
+
+      // --- Conditional formatting helpers ---
+      const COLOR_CLASSES = ['palered','red','darkred','orange','yellow','green','darkgreen','blue','purple'];
+      function tdSetColor(td, cls){ if(!td) return; COLOR_CLASSES.forEach(c=> td.classList.remove(c)); if(cls) td.classList.add(cls); }
+      function scrToClass(v){ const m={ I:'green', II:'yellow', III:'orange', IV:'palered', V:'red' }; return m[norm(v)]||''; }
+      function dcrToClass(v){ const m={ 'VH':'green','H-VH':'green','H':'yellow','M-H':'yellow','M':'orange','L-M':'orange','L':'palered','VL-L':'palered','VL':'red' }; return m[norm(v)]||''; }
+      function fcrToClass(v){ const m={ VL:'green', L:'yellow', M:'orange', H:'palered', VH:'red' }; return m[norm(v)]||''; }
+      function scoreClassFromVal(s){ const v=Number(s); if(!Number.isFinite(v)) return ''; if(v<10) return 'blue'; if(v<30) return 'darkgreen'; if(v<60) return 'yellow'; if(v<80) return 'darkred'; return 'purple'; }
+
+      const norm = s => String(s||'').trim().toUpperCase();
+      const clampIdx = (i) => (i<0?0:(i>4?4:i));
+
+      const scrScore = (scr)=>{ const i = SCR_ORDER.indexOf(norm(scr)); return i<0? null : (i+1); };
+      const dcrScore = (dcr)=>{ const v = DCR_SCORE_MAP[norm(dcr)]; return (v==null)? null : v; };
+      const fcrScore = (fcr)=>{ const v = FCR_SCORE_MAP[norm(fcr)]; return (v==null)? null : v; };
+
+      const scrPlot = (scr)=>{ const i = SCR_ORDER.indexOf(norm(scr)); return i<0? null : (i+0.5); };
+      const dcrPlot = (dcr)=>{ const pos = DCR_PLOT[norm(dcr)]; return (pos==null) ? null : pos; };
+      const fcrPlot = (fcr)=>{ const i = FCR_ORDER.indexOf(norm(fcr)); return i<0? null : (i+0.5); };
+
+      // inverse helpers
+      const xToSCR = (x)=> SCR_ORDER[ clampIdx(Math.round(Number(x)-0.5)) ];
+      const yToDCR = (y)=>{ const v = Number(y); if(!isFinite(v)) return 'VL'; const lbl = DCR_PLOT_INV.get(v); return lbl ?? 'VL'; };
+      const zToFCR = (z)=> FCR_ORDER[ clampIdx(Math.round(Number(z)-0.5)) ];
+
+      // Populate manual table size 1..20
+      for(let i=1;i<=20;i++){ const opt=document.createElement('option'); opt.value=String(i); opt.textContent=String(i); manualCount.appendChild(opt); }
+      manualCount.value = '5';
+
+      // ----- Colored band planes -----
+      function buildXYBands(){ const bands=[]; const x0=0,x1=5,z0=5; const specs=[[0,1,'green',0.35],[1,2,'yellow',0.35],[2,3,'orange',0.35],[3,4,'red',0.35],[4,5,'red',0.45]]; for(const [y0,y1,color,op] of specs){ const x=[[x0,x1],[x0,x1]], y=[[y0,y0],[y1,y1]], z=[[z0,z0],[z0,z0]]; bands.push({ type:'surface', x,y,z, showscale:false, opacity:op, colorscale:[[0,color],[1,color]], hoverinfo:'skip' }); } return bands; }
+      function buildXZBands(){ const bands=[]; const y0=5; const specs=[[0,1,'green',0.35],[1,2,'yellow',0.35],[2,3,'orange',0.35],[3,4,'red',0.35],[4,5,'red',0.45]]; for(const [x0,x1,color,op] of specs){ const x=[[x0,x1],[x0,x1]], y=[[y0,y0],[y0,y0]], z=[[0,0],[5,5]]; bands.push({ type:'surface', x,y,z, showscale:false, opacity:op, colorscale:[[0,color],[1,color]], hoverinfo:'skip' }); } return bands; }
+      function buildYZBands(){ const bands=[]; const y0=0,y1=5,x0=5; const specs=[[0,1,'green',0.35],[1,2,'yellow',0.35],[2,3,'orange',0.35],[3,4,'red',0.35],[4,5,'red',0.45]]; for(const [z0,z1,color,op] of specs){ const x=[[x0,x0],[x0,x0]], y=[[y0,y0],[y1,y1]], z=[[z0,z1],[z0,z1]]; bands.push({ type:'surface', x,y,z, showscale:false, opacity:op, colorscale:[[0,color],[1,color]], hoverinfo:'skip' }); } return bands; }
+
+      // Grids
+      const GRID_COLOR = 'rgba(0,0,0,0.6)';
+      function buildXYGrid(){ const lines=[]; for(let v=0; v<=5; v++){ lines.push({type:'scatter3d', mode:'lines', x:[v,v], y:[0,5], z:[5,5], line:{width:1, color:GRID_COLOR}, hoverinfo:'skip', showlegend:false}); lines.push({type:'scatter3d', mode:'lines', x:[0,5], y:[v,v], z:[5,5], line:{width:1, color:GRID_COLOR}, hoverinfo:'skip', showlegend:false}); } return lines; }
+      function buildXZGrid(){ const lines=[]; const y=5; for(let v=0; v<=5; v++){ lines.push({type:'scatter3d', mode:'lines', x:[v,v], y:[y,y], z:[0,5], line:{width:1, color:GRID_COLOR}, hoverinfo:'skip', showlegend:false}); lines.push({type:'scatter3d', mode:'lines', x:[0,5], y:[y,y], z:[v,v], line:{width:1, color:GRID_COLOR}, hoverinfo:'skip', showlegend:false}); } return lines; }
+      function buildYZGrid(){ const lines=[]; const x=5; for(let v=0; v<=5; v++){ lines.push({type:'scatter3d', mode:'lines', x:[x,x], y:[v,v], z:[0,5], line:{width:1, color:GRID_COLOR}, hoverinfo:'skip', showlegend:false}); lines.push({type:'scatter3d', mode:'lines', x:[x,x], y:[0,5], z:[v,v], line:{width:1, color:GRID_COLOR}, hoverinfo:'skip', showlegend:false}); } return lines; }
+
+      function buildExtraText(){ const pts=[[0.5,5.3,0,'VH'],[1.5,5.3,0,'H'],[2.5,5.3,0,'M'],[3.5,5.3,0,'L'],[4.5,5.3,0,'VL'],[2.5,5.5,-0.5,'Design Confidence'],[5.5,-0.2,0.75,'VL'],[5.5,-0.2,1.75,'L'],[5.5,-0.2,2.75,'M'],[5.5,-0.2,3.75,'H'],[5.5,-0.2,4.75,'VH'],[6.5,-1.0,2.75,'Failure\nConsequence'],[-0.5,0.5,5.5,'I'],[-0.5,1.5,5.5,'II'],[-0.5,2.5,5.5,'III'],[-0.5,3.5,5.5,'IV'],[-0.5,4.5,5.5,'V'],[-1,2.5,6,'Slope Condition\nClass']]; const texts=pts.map(p=>String(p[3])); const sizes=texts.map(t=>(t.replace(/<br>/g,'\n').length>3?14:12)); return { type:'scatter3d', mode:'text', x:pts.map(p=>p[0]), y:pts.map(p=>p[1]), z:pts.map(p=>p[2]), text:pts.map(p=>'<b>'+String(p[3]).replace(/\n/g,'<br>')+'</b>'), textfont:{ size:sizes, color:'#000' }, hoverinfo:'skip', showlegend:false }; }
+
+      // --- Manual table helpers ---
+      function getManualRows(){
+        const rows=[]; const trs=[...manualBody.querySelectorAll('tr')];
+        trs.forEach(tr=>{
+          const inputs=[...tr.querySelectorAll('input, select')];
+          if(inputs.length>=8){
+            const [nameInp,idInp,scrSel,dcrSel,fcrSel,/*score*/, rscrSel, rdcrSel, rfcrSel] = [
+              inputs[0], inputs[1], inputs[2], inputs[3], inputs[4], tr.querySelector('.score-initial'), inputs[5], inputs[6], inputs[7]
+            ];
+            rows.push({
+              id: (idInp.value||'').toUpperCase().slice(0,4),
+              name: nameInp.value||'',
+              scr: scrSel.value, dcr: dcrSel.value, fcr: fcrSel.value,
+              rscr: rscrSel.value, rdcr: rdcrSel.value, rfcr: rfcrSel.value
+            });
+          }
+        });
+        return rows;
+      }
+
+      function updateRowScores(tr){
+        const sels=[...tr.querySelectorAll('select')];
+        const tds = tr.children;
+        // initial score
+        const [scr,dcr,fcr] = [sels[0]?.value, sels[1]?.value, sels[2]?.value];
+        const s1 = (scr&&dcr&&fcr) ? scrScore(scr)*dcrScore(dcr)*fcrScore(fcr) : '';
+        const sc1 = tr.querySelector('.score-initial'); if(sc1) sc1.textContent = String(s1);
+        tdSetColor(tds[2], scrToClass(scr));
+        tdSetColor(tds[3], dcrToClass(dcr));
+        tdSetColor(tds[4], fcrToClass(fcr));
+        tdSetColor(tds[5], scoreClassFromVal(s1));
+        // residual score
+        const [rscr,rdcr,rfcr] = [sels[3]?.value, sels[4]?.value, sels[5]?.value];
+        const s2 = (rscr&&rdcr&&rfcr) ? scrScore(rscr)*dcrScore(rdcr)*fcrScore(rfcr) : '';
+        const sc2 = tr.querySelector('.score-residual'); if(sc2) sc2.textContent = String(s2);
+        tdSetColor(tds[6], scrToClass(rscr));
+        tdSetColor(tds[7], dcrToClass(rdcr));
+        tdSetColor(tds[8], fcrToClass(rfcr));
+        tdSetColor(tds[9], scoreClassFromVal(s2));
+      }
+
+      function manualRebuildRows(n, prev){
+        const keep = Array.isArray(prev) ? prev : [];
+        manualBody.innerHTML='';
+        for(let i=0;i<n;i++){
+          const data = keep[i] || {};
+          const tr=document.createElement('tr');
+
+          // ID
+          let td=document.createElement('td');
+          const idInp=document.createElement('input'); idInp.type='text'; idInp.maxLength=4; idInp.className='id-input'; idInp.value=(data.id)||`P${i+1}`; td.appendChild(idInp); tr.appendChild(td);
+
+          // Name
+          td=document.createElement('td');
+          const nameInp=document.createElement('input'); nameInp.type='text'; nameInp.className='name-input'; nameInp.value=(data.name)||''; td.appendChild(nameInp); tr.appendChild(td);
+
+          // Initial SCR/DCR/FCR
+          const makeSel=(opts,val)=>{ const s=document.createElement('select'); opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);}); s.value = val || opts[0]; return s; };
+          td=document.createElement('td'); const scrSel=makeSel(SCR_ORDER, data.scr||'I'); td.appendChild(scrSel); tr.appendChild(td);
+          td=document.createElement('td'); const dcrSel=makeSel(DCR_ORDER, data.dcr||'VH'); td.appendChild(dcrSel); tr.appendChild(td);
+          td=document.createElement('td'); const fcrSel=makeSel(FCR_ORDER, data.fcr||'VL'); td.appendChild(fcrSel); tr.appendChild(td);
+          td=document.createElement('td'); const sc1=document.createElement('span'); sc1.className='score-initial'; td.appendChild(sc1); tr.appendChild(td);
+
+          // Residual SCR/DCR/FCR
+          td=document.createElement('td'); const rscrSel=makeSel(SCR_ORDER, data.rscr||scrSel.value); td.appendChild(rscrSel); tr.appendChild(td);
+          td=document.createElement('td'); const rdcrSel=makeSel(DCR_ORDER, data.rdcr||dcrSel.value); td.appendChild(rdcrSel); tr.appendChild(td);
+          td=document.createElement('td'); const rfcrSel=makeSel(FCR_ORDER, data.rfcr||fcrSel.value); td.appendChild(rfcrSel); tr.appendChild(td);
+          td=document.createElement('td'); const sc2=document.createElement('span'); sc2.className='score-residual'; td.appendChild(sc2); tr.appendChild(td);
+
+          // Wire score updates
+          [scrSel,dcrSel,fcrSel,rscrSel,rdcrSel,rfcrSel].forEach(el=> el.addEventListener('change', ()=>{ updateRowScores(tr); renderFromTable(); }));
+          [idInp,nameInp].forEach(el=> el.addEventListener('input', ()=>{ renderFromTable(); }));
+
+          manualBody.appendChild(tr);
+          updateRowScores(tr);
+        }
+      }
+
+      // Plot helpers
+      function sphericalToEye(azimDeg, elevDeg, r){ const th=azimDeg*Math.PI/180; const ph=elevDeg*Math.PI/180; return { x:r*Math.cos(ph)*Math.cos(th), y:r*Math.cos(ph)*Math.sin(th), z:r*Math.sin(ph) }; }
+      function getCamera(){ const az=-Number(azimRange.value), el=Number(elevRange.value), r=1.6-Number(zoomRange.value); return { eye: sphericalToEye(az, el, r), up:{x:0,y:0,z:1}, center:{x:0, y:0, z:-0.1-Number(panZRange.value)} }; }
+      function applyCamera(){ plotDivs.forEach(pd=> Plotly.relayout(pd, {'scene.camera': getCamera()})); }
+
+      const PLOT_CONFIG = { responsive:true, displaylogo:false, scrollZoom:false, doubleClick:false };
+      function baseLayout(camera){ return { showlegend:false, scene:{ xaxis:{title:{text:''}, range:[6.5,-1.5], visible:false, showgrid:false}, yaxis:{title:{text:''}, range:[6.5,-1.5], visible:false, showgrid:false}, zaxis:{title:{text:''}, range:[6.5,-1.5], visible:false, showgrid:false}, aspectmode:'cube', showaxeslabels:false, bgcolor:'#ffffff', domain:{x:[0,1], y:[0,1]}, camera: camera }, paper_bgcolor:'#ffffff', margin:{l:0,r:0,t:0,b:0,pad:0} }; }
+      function scoreToColor(s){ if (s < 10) return 'blue'; if (s < 30) return 'green'; if (s < 60) return 'yellow'; if (s < 80) return 'red'; return 'purple'; }
+      function scaleLinear(values){ const s_min=10, s_max=65; const mslope=(s_max - s_min)/99; const cint=s_min - mslope; return values.map(v => mslope*v + cint); }
+
+      function buildProjections(xs, ys, zs){ const traces=[]; const dashLine={ width:1, color:'black', dash:'dot' }; { const x=[], y=[], z=[]; for(let i=0;i<xs.length;i++){ x.push(xs[i], xs[i], null); y.push(ys[i], ys[i], null); z.push(zs[i], 5, null);} traces.push({type:'scatter3d', mode:'lines', x,y,z, line:{...dashLine}, hoverinfo:'skip', showlegend:false}); traces.push({type:'scatter3d', mode:'markers', x:xs, y:ys, z: xs.map(()=>5), marker:{symbol:'x', size:1.5, color:'black'}, hoverinfo:'skip', showlegend:false}); } { const x=[], y=[], z=[]; for(let i=0;i<xs.length;i++){ x.push(xs[i], xs[i], null); y.push(ys[i], 5, null); z.push(zs[i], zs[i], null);} traces.push({type:'scatter3d', mode:'lines', x,y,z, line:{...dashLine}, hoverinfo:'skip', showlegend:false}); traces.push({type:'scatter3d', mode:'markers', x: xs, y: xs.map(()=>5), z: zs, marker:{symbol:'x', size:1.5, color:'black'}, hoverinfo:'skip', showlegend:false}); } { const x=[], y=[], z=[]; for(let i=0;i<xs.length;i++){ x.push(xs[i], 5, null); y.push(ys[i], ys[i], null); z.push(zs[i], zs[i], null);} traces.push({type:'scatter3d', mode:'lines', x,y,z, line:{...dashLine}, hoverinfo:'skip', showlegend:false}); traces.push({type:'scatter3d', mode:'markers', x: xs.map(()=>5), y: ys, z: zs, marker:{symbol:'x', size:1.5, color:'black'}, hoverinfo:'skip', showlegend:false}); } return traces; }
+
+      function renameOverlapLabels(xs, ys, zs, labels){
+        // Concatenate labels for points that share the exact same (x,y,z)
+        const groups = new Map();
+        for(let i=0;i<xs.length;i++){
+          const key = `${xs[i]}|${ys[i]}|${zs[i]}`;
+          const lbl = (labels[i] && String(labels[i]).trim()) ? String(labels[i]).trim() : `P${i+1}`;
+          if(!groups.has(key)) groups.set(key, []);
+          groups.get(key).push(lbl);
+        }
+        const combined = new Map();
+        groups.forEach((arr, key)=> combined.set(key, arr.join(', ')));
+        return labels.map((_, i)=> combined.get(`${xs[i]}|${ys[i]}|${zs[i]}`));
+      }
+
+      function makeTraces(points){
+        if(!Array.isArray(points) || !points.length){
+          return [
+            ...buildXYBands(),...buildXZBands(),...buildYZBands(),
+            ...buildXYGrid(),...buildXZGrid(),...buildYZGrid(),
+            buildExtraText()
+          ];
+        }
+        const xs=points.map(p=>Number(p.x));
+        const ys=points.map(p=>Number(p.y));
+        const zs=points.map(p=>Number(p.z));
+        const labels=points.map(p=>p.label||'');
+        const labelsRen=renameOverlapLabels(xs,ys,zs,labels);
+        const scores=points.map((p,i)=>{ const scr=p._scr ?? xToSCR(ys[i]); const dcr=p._dcr ?? yToDCR(xs[i]); const fcr=p._fcr ?? zToFCR(zs[i]); return scrScore(scr)*dcrScore(dcr)*fcrScore(fcr); });
+        const colors=scores.map(scoreToColor);
+        const sizes=scaleLinear(scores,1,100);
+        const textBold=labelsRen.map(l=>l?('<b>'+l+'</b>'):'');
+        const haloText={ type:'scatter3d', mode:'text', x:xs, y:ys, z:zs, text:textBold, textposition:'bottom center', textfont:{ size:16, color:'#ffffff' }, hoverinfo:'skip', showlegend:false };
+        const labelText={ type:'scatter3d', mode:'text', x:xs, y:ys, z:zs, text:textBold, textposition:'bottom center', textfont:{ size:15, color:'#000000' }, hoverinfo:'skip', showlegend:false };
+        const trace={ type:'scatter3d', mode:'markers', x:xs, y:ys, z:zs, text:labelsRen, marker:{ size:sizes, color:colors, line:{ width:1.5, color:'#000' }, symbol:'circle' }, customdata:scores, hovertemplate:'%{text}<br>x=%{x}<br>y=%{y}<br>z=%{z}<br>score=%{customdata}<extra></extra>' };
+        return [
+          ...buildXYBands(),...buildXZBands(),...buildYZBands(),
+          ...buildXYGrid(),...buildXZGrid(),...buildYZGrid(),
+          ...buildProjections(xs,ys,zs),
+          buildExtraText(),
+          haloText,
+          labelText,
+          trace
+        ];
+      }
+
+      function render(initialPoints, residualPoints){
+        const layout=baseLayout(getCamera());
+        const config=PLOT_CONFIG;
+        Plotly.newPlot(plotDivs[0], makeTraces(initialPoints||[]), layout, config);
+        Plotly.newPlot(plotDivs[1], makeTraces(residualPoints||[]), layout, config);
+        const total = (initialPoints && initialPoints.length) || 0;
+        status(total?`Plotted ${total} point${total===1?'':'s'}.`:'No rows to plot.', !total);
+      }
+
+      // Build points from table rows
+      function buildPointsFromRows(rows, residual=false){
+        const pts=[];
+        rows.forEach((r,idx)=>{
+          const scr = residual ? r.rscr : r.scr;
+          const dcr = residual ? r.rdcr : r.dcr;
+          const fcr = residual ? r.rfcr : r.fcr;
+          const x=dcrPlot(dcr), y=scrPlot(scr), z=fcrPlot(fcr);
+          if(x!=null&&y!=null&&z!=null){ pts.push({x,y,z,label:(r.id||r.name||`P${idx+1}`), _scr:scr, _dcr:dcr, _fcr:fcr}); }
+        });
+        return pts;
+      }
+
+      function gatherManualPointsInitial(){ return buildPointsFromRows(getManualRows(), false); }
+      function gatherManualPointsResidual(){ return buildPointsFromRows(getManualRows(), true); }
+
+      function renderFromTable(){ const initPts=gatherManualPointsInitial(); const resPts=gatherManualPointsResidual(); render(initPts,resPts); }
+
+      // File parsing with SheetJS -> populate initial columns; copy into residual
+      function detectHeaders(headers){ const normh=headers.map(h=>String(h||'').trim()); const lower=normh.map(h=>h.toLowerCase()); function findOne(cands){ for(const c of cands){ const i=lower.indexOf(c); if(i!==-1) return normh[i]; } return null; } const scr=findOne(['scr','s.c.r','s cr']); const dcr=findOne(['dcr','d.c.r','d cr']); const fcr=findOne(['fcr','f.c.r','f cr']); const x=findOne(['x']); const y=findOne(['y']); const z=findOne(['z']); const label=findOne(['label','name','id']); return {scr,dcr,fcr,x,y,z,label}; }
+      async function parseFile(file){ if(!window.XLSX){ status('Cannot parse file: SheetJS not loaded.', true); return []; } const data=await file.arrayBuffer(); const wb=XLSX.read(data,{type:'array'}); const sheet=wb.Sheets[wb.SheetNames[0]]; const rows=XLSX.utils.sheet_to_json(sheet,{header:1, defval:null, blankrows:false}); if(rows.length===0){ status('The sheet is empty.', true); return []; } const headers=rows[0]; const m=detectHeaders(headers); const out=[]; for(let r=1;r<rows.length;r++){ const row=rows[r]; if(!row) continue; let label=''; if(m.label){ const li=headers.indexOf(m.label); label=row[li]==null? '' : String(row[li]); } if(m.scr&&m.dcr&&m.fcr){ const si=headers.indexOf(m.scr), di=headers.indexOf(m.dcr), fi=headers.indexOf(m.fcr); const scr=norm(row[si]), dcr=norm(row[di]), fcr=norm(row[fi]); const xp=dcrPlot(dcr), yp=scrPlot(scr), zp=fcrPlot(fcr); if(xp!=null&&yp!=null&&zp!=null){ out.push({x:xp,y:yp,z:zp,label, _scr:scr, _dcr:dcr, _fcr:fcr}); } } else if(m.x&&m.y&&m.z){ const xi=headers.indexOf(m.x), yi=headers.indexOf(m.y), zi=headers.indexOf(m.z); const x=Number(row[xi]), y=Number(row[yi]), z=Number(row[zi]); if(Number.isFinite(x)&&Number.isFinite(y)&&Number.isFinite(z)){ out.push({x,y,z,label}); } } } if(!out.length){ status('No valid rows for SCR/DCR/FCR (or x/y/z) were found.', true); } return out; }
+      async function handleFile(file){ status('Reading '+file.name+' …'); const pts=await parseFile(file); if(pts.length){
+          // Convert parsed points -> rows
+          const rows = pts.map((p,i)=>({ id:(p.label||`P${i+1}`).slice(0,4).toUpperCase(), name:'', scr:p._scr||xToSCR(p.y), dcr:p._dcr||yToDCR(p.x), fcr:p._fcr||zToFCR(p.z), rscr:p._scr||xToSCR(p.y), rdcr:p._dcr||yToDCR(p.x), rfcr:p._fcr||zToFCR(p.z) }));
+          manualCount.value = String(rows.length);
+          manualRebuildRows(rows.length, rows);
+          render(buildPointsFromRows(rows,false), buildPointsFromRows(rows,true));
+        } else { status('No valid numeric rows found for x,y,z.', true); }
+      }
+
+      // Wire up controls
+      fileInput?.addEventListener('change', (e) => {const f = e.target.files && e.target.files[0]; if (f) handleFile(f);});
+
+      manualRebuildRows(parseInt(manualCount.value||'5',10));
+      manualCount.addEventListener('change', ()=>{ const prev=getManualRows(); manualRebuildRows(parseInt(manualCount.value,10), prev); const initPts=gatherManualPointsInitial(); const resPts=gatherManualPointsResidual(); render(initPts,resPts); });
+      // Toggle layout: default 2 panels (hide panel-2) -> 3 panels when checked
+      const mainGrid = document.getElementById('mainGrid');
+      const comparativeToggle = document.getElementById('comparative');
+      function resizePlots(){ plotDivs.forEach(pd => { try { Plotly.Plots.resize(pd); } catch (e) {} }); }
+      function applyComparative(){
+        if(mainGrid && comparativeToggle){
+          const on = !!comparativeToggle.checked;
+          // Layout: two panels when OFF; three panels when ON
+          mainGrid.classList.toggle('two-panels', !on);
+          // Table: hide residual columns when OFF
+          if (inputTable) inputTable.classList.toggle('hide-residual', !on);
+          // Reflow plots and re-render
+          requestAnimationFrame(()=>{ resizePlots(); applyCamera(); const initPts=gatherManualPointsInitial(); const resPts=gatherManualPointsResidual(); render(initPts,resPts); });
+        }
+      }
+      mainGrid.classList.add('two-panels');
+      // Ensure table matches default (OFF)
+      if (inputTable) inputTable.classList.add('hide-residual'); // default to 2 panels
+      comparativeToggle?.addEventListener('change', applyComparative);
+      window.addEventListener('resize', resizePlots);
+
+      // Initial placeholder data
+      const initialRows=[{ id:'P1', name:'', scr:'I', dcr:'VH', fcr:'VL', rscr:'I', rdcr:'VH', rfcr:'VL' }];
+      manualRebuildRows(1, initialRows);
+      manualCount.value='1';
+      render(buildPointsFromRows(initialRows,false), buildPointsFromRows(initialRows,true));
+
+      // Hook sliders -> camera only
+      [azimRange, elevRange, zoomRange, panZRange].forEach(el => el.addEventListener('input', ()=>{ applyCamera(); }));
+      applyCamera();
+    });
+  </script>
+</body>
+</html>
