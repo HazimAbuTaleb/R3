@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Open Pit and Waste Dumps Closure</title>
+  <title>Open Pit and Waste Dumps Closure — v3 (TSR, Import/Export, PDF)</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body { margin: 0; font-family: 'Kommon Grotesk', Arial, sans-serif; background: #fff; color: #000; }
@@ -29,7 +29,7 @@
     .left-panel .lp-banner { display:flex; justify-content:space-between; align-items:center; background:#efefef; border:1px solid #ddd; border-radius:6px; padding:8px 10px; font-weight:700; margin-bottom:12px; }
     #status { font-weight:600; font-size:12px; color:#2a6f2a; }
     #status.bad { color:#CA1416; }
-    .controls { display:flex; align-items:center; gap:16px 24px; flex-wrap:nowrap; }
+    .controls { display:flex; align-items:center; gap:16px 24px; flex-wrap:wrap; }
     .control-group { display:grid; grid-template-columns:repeat(4, minmax(160px, 1fr)); gap:16px 24px; flex:1 1 auto; }
     .control { display:grid; gap:6px; }
     .control label { font-weight:600; font-size:14px; }
@@ -40,17 +40,20 @@
     input[type="range"]::-moz-range-track{ background:#CA1416; height:6px; border-radius:999px; }
     input[type="range"]::-moz-range-thumb{ width:16px; height:16px; border-radius:50%; background:#CA1416; border:2px solid #fff; box-shadow:0 0 0 1px #CA1416; }
 
-    /* Toggle */
-    .actions { display:inline-flex; gap:12px; align-items:center; }
+    /* Toggles & actions */
+    .actions { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
     .toggle { display:inline-flex; align-items:center; gap:10px; }
     .toggle input { appearance:none; width:40px; height:22px; background:#ddd; border-radius:999px; position:relative; outline:none; cursor:pointer; }
     .toggle input::after { content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .2s ease; }
     .toggle input:checked { background:#CA1416; }
     .toggle input:checked::after { transform:translateX(18px); }
 
+    .btn { appearance:none; border:1px solid #bbb; background:#fff; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:600; }
+    .btn:hover { background:#f5f5f5; }
+
     /* Main grid (plots + table) */
-    .main-grid { width:100%; display:grid; gap:16px; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 550px; }
-    .main-grid.two-panels { grid-template-columns:minmax(0,1fr) 550px; }
+    .main-grid { width:100%; display:grid; gap:16px; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 600px; }
+    .main-grid.two-panels { grid-template-columns:minmax(0,1fr) 600px; }
     .main-grid.two-panels #panel-2 { display:none; }
     .vpanel { border:1px solid #ccc; border-radius:8px; background:#fafafa; min-height:655px; overflow:hidden; display:flex; flex-direction:column; }
     .plot-title { padding:8px 10px; font-weight:700; border-bottom:1px solid #ddd; background:#efefef; display:flex; justify-content:space-between; align-items:center; }
@@ -77,10 +80,15 @@
     .blue { background:#00B0F0; color:#fff; }
     .purple { background:#7030A0; color:#fff; }
 
-    /* Hide Target Assessment columns when toggled off */
+    /* Hide Target Assessment columns when comparative toggle is off */
+    #inputTable.hide-target thead tr:nth-child(2) th.init-group { display:table-cell; }
     #inputTable.hide-target thead tr:first-child th:last-child { display:none; }
-    #inputTable.hide-target thead tr:nth-child(2) th:nth-last-child(-n+3) { display:none; }
-    #inputTable.hide-target tbody td:nth-last-child(-n+3) { display:none; }
+    #inputTable.hide-target thead tr:nth-child(2) th.tgt-group { display:none; }
+    #inputTable.hide-target tbody td.tgt-group { display:none; }
+
+    /* Hide TSR FoS columns when TSR toggle is off */
+    #inputTable.hide-tsr thead tr:nth-child(2) th.col-tsr { display:none; }
+    #inputTable.hide-tsr tbody td.col-tsr { display:none; }
 
     /* Responsive */
     @media (max-width: 1200px){
@@ -91,6 +99,9 @@
     }
   </style>
   <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+  <!-- For PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
   <div class="top-banner">
@@ -122,6 +133,11 @@
         </div>
         <div class="actions">
           <label class="toggle"><input type="checkbox" id="comparative" /> <span>Comparative Assessment</span></label>
+          <label class="toggle"><input type="checkbox" id="toggleTSR" checked /> <span>Show TSR FoS</span></label>
+          <button class="btn" id="btnImportCSV" title="Import table data from CSV">Import Data</button>
+          <button class="btn" id="btnExportCSV" title="Export table data as CSV">Export Data</button>
+          <button class="btn" id="btnExportPDF" title="Export main grid and bottom tables as PDF">Export PDF</button>
+          <input type="file" id="fileInput" accept=".csv,text/csv" hidden />
         </div>
       </div>
     </div>
@@ -144,12 +160,12 @@
               <th rowspan="2" class="select-header"><input id="checkAll" type="checkbox" /></th>
               <th rowspan="2">ID</th>
               <th rowspan="2">SCR</th>
-              <th colspan="3">Initial Assessment</th>
-              <th colspan="3">Target Assessment</th>
+              <th colspan="4">Initial Assessment</th>
+              <th colspan="4">Target Assessment</th>
             </tr>
             <tr>
-              <th>DCR</th><th>FCR</th><th>Score</th>
-              <th>DCR</th><th>FCR</th><th>Score</th>
+              <th class="init-group">DCR</th><th class="init-group">FCR</th><th class="init-group">Score</th><th class="init-group col-tsr">TSR FoS</th>
+              <th class="tgt-group">DCR</th><th class="tgt-group">FCR</th><th class="tgt-group">Score</th><th class="tgt-group col-tsr">TSR FoS</th>
             </tr>
           </thead>
           <tbody id="manualBody"></tbody>
@@ -158,7 +174,7 @@
     </div>
 
     <!-- Bottom reference tables -->
-    <div class="tables-panel">
+    <div class="tables-panel" id="tablesPanel">
       <table>
         <tr><th>Slope Condition Class Rating</th><th>Design Confidence Rating</th><th>Failure Consequence Rating</th></tr>
         <tr><td class="red">V = 5</td><td class="red">VL = 4</td><td class="red">VH = 5</td></tr>
@@ -184,14 +200,16 @@
     function status(msg, bad){ if(!statusEl) return; statusEl.textContent = msg; statusEl.classList.toggle('bad', !!bad); (console[bad?'error':'log']||console.log)('[status]', msg); }
 
     window.addEventListener('DOMContentLoaded', ()=>{
-      if(!window.Plotly){ status('Plotly failed to load (likely blocked by network/CDN).', true); document.getElementById('plot1').textContent='Plotly failed to load.'; document.getElementById('plot2').textContent='Plotly failed to load.'; return; }
+      if(!window.Plotly){ status('Plotly failed to load (likely blocked by network/CDN).', true); document.getElementById('plot1').textContent='Plotly failed to load.'; document.getElementById('plot2').textContent='Plotly failed to load.'; }
 
       const plotDivs = [document.getElementById('plot1'), document.getElementById('plot2')];
       const manualCount = document.getElementById('manualCount');
       const manualBody = document.getElementById('manualBody');
       const inputTable = document.getElementById('inputTable');
       const mainGrid = document.getElementById('mainGrid');
+      const tablesPanel = document.getElementById('tablesPanel');
       const comparativeToggle = document.getElementById('comparative');
+      const toggleTSR = document.getElementById('toggleTSR');
 
       // block mouse interactions on plots (use sliders)
       plotDivs.forEach(pd=>{ const blocker=document.createElement('div'); blocker.style.position='absolute'; blocker.style.inset='0'; blocker.style.zIndex='10'; blocker.style.pointerEvents='auto'; blocker.title='Mouse disabled; use the sliders to spin/tilt/zoom'; pd.appendChild(blocker); });
@@ -206,7 +224,7 @@
 
       function sphericalToEye(azimDeg,elevDeg,r){ const th=azimDeg*Math.PI/180, ph=elevDeg*Math.PI/180; return {x:r*Math.cos(ph)*Math.cos(th), y:r*Math.cos(ph)*Math.sin(th), z:r*Math.sin(ph)}; }
       function getCamera(){ const az=-Number(azimRange.value), el=Number(elevRange.value), r=1.6-Number(zoomRange.value); return { eye:sphericalToEye(az,el,r), up:{x:0,y:0,z:1}, center:{x:0,y:0,z:-0.1-Number(panZRange.value)} } }
-      function applyCamera(){ plotDivs.forEach(pd=> Plotly.relayout(pd, {'scene.camera': getCamera()})); }
+      function applyCamera(){ if(window.Plotly){ plotDivs.forEach(pd=> Plotly.relayout(pd, {'scene.camera': getCamera()})); } }
       ;[azimRange,elevRange,zoomRange,panZRange].forEach(el=> el.addEventListener('input', applyCamera));
 
       const PLOT_CONFIG={ responsive:true, displaylogo:false, scrollZoom:false, doubleClick:false };
@@ -224,7 +242,7 @@
         };
       }
 
-      // Bands / grids / labels
+      // Bands / grids / labels (unchanged from v2)
       const GRID_COLOR='rgba(0,0,0,0.6)';
       function buildXYBands(){ const bands=[], x0=0,x1=5,z0=5, specs=[[0,1,'green',0.35],[1,2,'yellow',0.35],[2,3,'orange',0.35],[3,4,'red',0.35],[4,5,'red',0.45]]; for(const [y0,y1,color,op] of specs){ const x=[[x0,x1],[x0,x1]], y=[[y0,y0],[y1,y1]], z=[[z0,z0],[z0,z0]]; bands.push({type:'surface',x,y,z,showscale:false,opacity:op,colorscale:[[0,color],[1,color]],hoverinfo:'skip'});} return bands; }
       function buildXZBands(){ const bands=[], y0=5, specs=[[0,1,'green',0.35],[1,2,'yellow',0.35],[2,3,'orange',0.35],[3,4,'red',0.35],[4,5,'red',0.45]]; for(const [x0,x1,color,op] of specs){ const x=[[x0,x1],[x0,x1]], y=[[y0,y0],[y0,y0]], z=[[0,0],[5,5]]; bands.push({type:'surface',x,y,z,showscale:false,opacity:op,colorscale:[[0,color],[1,color]],hoverinfo:'skip'});} return bands; }
@@ -280,12 +298,11 @@
       const yToDCR=y=>{ const v=Number(y); if(!isFinite(v)) return 'VL'; return DCR_PLOT_INV.get(v) ?? 'VL'; }
       const zToFCR=z=> FCR_ORDER[clampIdx(Math.round(Number(z)-0.5))];
 
-      // ID helpers: 0 -> A, 1 -> B, ... 25 -> Z, 26 -> AA, etc.
-      function indexToLetters(i){
-        let n = i + 1, s = '';
-        while(n > 0){ const rem = (n - 1) % 26; s = String.fromCharCode(65 + rem) + s; n = Math.floor((n - 1) / 26); }
-        return s;
-      }
+      // TSR FoS mapping from Score
+      function scoreToTSRFoS(s){ const v=Number(s); if(!Number.isFinite(v)) return ''; if(v < 10) return '>1.2'; if(v <= 29) return '>1.3'; if(v <= 59) return '>1.5'; if(v <= 79) return '>1.8'; return '>2.0'; }
+
+      // ID helpers
+      function indexToLetters(i){ let n = i + 1, s = ''; while(n > 0){ const rem = (n - 1) % 26; s = String.fromCharCode(65 + rem) + s; n = Math.floor((n - 1) / 26); } return s; }
 
       // Conditional formatting helpers
       const COLOR_CLASSES=['palered','red','darkred','orange','yellow','green','darkgreen','blue','purple'];
@@ -302,17 +319,25 @@
         const fcr=tr.querySelector('.sel-fcr')?.value;
         const tdcr=tr.querySelector('.sel-tdcr')?.value;
         const tfcr=tr.querySelector('.sel-tfcr')?.value;
-        const s1=(scr&&dcr&&fcr)? scrScore(scr)*dcrScore(dcr)*fcrScore(fcr) : '';
-        const s2=(scr&&tdcr&&tfcr)? scrScore(scr)*dcrScore(tdcr)*fcrScore(tfcr) : '';
-        const sc1=tr.querySelector('.score-initial'); if(sc1) sc1.textContent=String(s1);
-        const sc2=tr.querySelector('.score-target'); if(sc2) sc2.textContent=String(s2);
+        const sc1=(scr&&dcr&&fcr)? scrScore(scr)*dcrScore(dcr)*fcrScore(fcr) : '';
+        const sc2=(scr&&tdcr&&tfcr)? scrScore(scr)*dcrScore(tdcr)*fcrScore(tfcr) : '';
+
+        const sc1El=tr.querySelector('.score-initial'); if(sc1El) sc1El.textContent=String(sc1);
+        const sc2El=tr.querySelector('.score-target'); if(sc2El) sc2El.textContent=String(sc2);
+
+        const tsr1El=tr.querySelector('.tsr-initial'); if(tsr1El) tsr1El.textContent=scoreToTSRFoS(sc1);
+        const tsr2El=tr.querySelector('.tsr-target'); if(tsr2El) tsr2El.textContent=scoreToTSRFoS(sc2);
+
         tdSetColor(tr.querySelector('.td-scr'), scrToClass(scr));
         tdSetColor(tr.querySelector('.td-dcr'), dcrToClass(dcr));
         tdSetColor(tr.querySelector('.td-fcr'), fcrToClass(fcr));
-        tdSetColor(tr.querySelector('.td-score'), scoreClassFromVal(s1));
+        tdSetColor(tr.querySelector('.td-score'), scoreClassFromVal(sc1));
+        tdSetColor(tr.querySelector('.td-tsr'), scoreClassFromVal(sc1));
         tdSetColor(tr.querySelector('.td-tdcr'), dcrToClass(tdcr));
         tdSetColor(tr.querySelector('.td-tfcr'), fcrToClass(tfcr));
-        tdSetColor(tr.querySelector('.td-tscore'), scoreClassFromVal(s2));
+        tdSetColor(tr.querySelector('.td-tscore'), scoreClassFromVal(sc2));
+        tdSetColor(tr.querySelector('.td-ttsr'), scoreClassFromVal(sc2));
+
       }
 
       function getManualRows(){
@@ -354,16 +379,18 @@
 
           const makeSel=(opts,val,cls)=>{ const s=document.createElement('select'); s.className=cls; opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);}); s.value = val || opts[0]; return s; };
 
-          // Initial SCR/DCR/FCR/Score
+          // Initial SCR/DCR/FCR/Score/TSR
           td=document.createElement('td'); td.className='td-scr'; const scrSel=makeSel(SCR_ORDER, data.scr||'I','sel-scr'); td.appendChild(scrSel); tr.appendChild(td);
           td=document.createElement('td'); td.className='td-dcr'; const dcrSel=makeSel(DCR_ORDER, data.dcr||'VH','sel-dcr'); td.appendChild(dcrSel); tr.appendChild(td);
           td=document.createElement('td'); td.className='td-fcr'; const fcrSel=makeSel(FCR_ORDER, data.fcr||'VL','sel-fcr'); td.appendChild(fcrSel); tr.appendChild(td);
           td=document.createElement('td'); td.className='td-score'; const sc1=document.createElement('span'); sc1.className='score-initial'; td.appendChild(sc1); tr.appendChild(td);
+          td=document.createElement('td'); td.className='col-tsr td-tsr'; const tsr1=document.createElement('span'); tsr1.className='tsr-initial'; td.appendChild(tsr1); tr.appendChild(td);
 
-          // Target DCR/FCR/Score (SCR shared)
-          td=document.createElement('td'); td.className='td-tdcr'; const tdcrSel=makeSel(DCR_ORDER, data.tdcr||dcrSel.value,'sel-tdcr'); td.appendChild(tdcrSel); tr.appendChild(td);
-          td=document.createElement('td'); td.className='td-tfcr'; const tfcrSel=makeSel(FCR_ORDER, data.tfcr||fcrSel.value,'sel-tfcr'); td.appendChild(tfcrSel); tr.appendChild(td);
-          td=document.createElement('td'); td.className='td-tscore'; const sc2=document.createElement('span'); sc2.className='score-target'; td.appendChild(sc2); tr.appendChild(td);
+          // Target DCR/FCR/Score/TSR (SCR shared)
+          td=document.createElement('td'); td.className='td-tdcr tgt-group'; const tdcrSel=makeSel(DCR_ORDER, data.tdcr||dcrSel.value,'sel-tdcr'); td.appendChild(tdcrSel); tr.appendChild(td);
+          td=document.createElement('td'); td.className='td-tfcr tgt-group'; const tfcrSel=makeSel(FCR_ORDER, data.tfcr||fcrSel.value,'sel-tfcr'); td.appendChild(tfcrSel); tr.appendChild(td);
+          td=document.createElement('td'); td.className='td-tscore tgt-group'; const sc2=document.createElement('span'); sc2.className='score-target'; td.appendChild(sc2); tr.appendChild(td);
+          td=document.createElement('td'); td.className='col-tsr tgt-group td-ttsr'; const tsr2=document.createElement('span'); tsr2.className='tsr-target'; td.appendChild(tsr2); tr.appendChild(td);
 
           // Events -> update + re-render
           [scrSel,dcrSel,fcrSel,tdcrSel,tfcrSel].forEach(el=> el.addEventListener('change', ()=>{ updateRowScores(tr); renderFromTable(); }));
@@ -393,7 +420,7 @@
       function buildProjections(xs,ys,zs){ const t=[], dash={width:1,color:'black',dash:'dot'}; {const x=[],y=[],z=[]; for(let i=0;i<xs.length;i++){ x.push(xs[i],xs[i],null); y.push(ys[i],ys[i],null); z.push(zs[i],5,null);} t.push({type:'scatter3d',mode:'lines',x,y,z,line:{...dash},hoverinfo:'skip',showlegend:false}); t.push({type:'scatter3d',mode:'markers',x:xs,y:ys,z:xs.map(()=>5),marker:{symbol:'x',size:1.5,color:'black'},hoverinfo:'skip',showlegend:false}); } {const x=[],y=[],z=[]; for(let i=0;i<xs.length;i++){ x.push(xs[i],xs[i],null); y.push(ys[i],5,null); z.push(zs[i],zs[i],null);} t.push({type:'scatter3d',mode:'lines',x,y,z,line:{...dash},hoverinfo:'skip',showlegend:false}); t.push({type:'scatter3d',mode:'markers',x:xs,y:xs.map(()=>5),z:zs,marker:{symbol:'x',size:1.5,color:'black'},hoverinfo:'skip',showlegend:false}); } {const x=[],y=[],z=[]; for(let i=0;i<xs.length;i++){ x.push(xs[i],5,null); y.push(ys[i],ys[i],null); z.push(zs[i],zs[i],null);} t.push({type:'scatter3d',mode:'lines',x,y,z,line:{...dash},hoverinfo:'skip',showlegend:false}); t.push({type:'scatter3d',mode:'markers',x:xs.map(()=>5),y:ys,z:zs,marker:{symbol:'x',size:1.5,color:'black'},hoverinfo:'skip',showlegend:false}); } return t; }
       function renameOverlapLabels(xs,ys,zs,labels){ const groups=new Map(); for(let i=0;i<xs.length;i++){ const key=`${xs[i]}|${ys[i]}|${zs[i]}`; const lbl=(labels[i]&&String(labels[i]).trim())?String(labels[i]).trim():indexToLetters(i); if(!groups.has(key)) groups.set(key, []); groups.get(key).push(lbl); } const combined=new Map(); groups.forEach((arr,key)=> combined.set(key, arr.join(', '))); return labels.map((_,i)=> combined.get(`${xs[i]}|${ys[i]}|${zs[i]}`)); }
       function makeTraces(points){ if(!Array.isArray(points)||!points.length){ return [...buildXYBands(),...buildXZBands(),...buildYZBands(), ...buildXYGrid(),...buildXZGrid(),...buildYZGrid(), buildExtraText()]; } const xs=points.map(p=>+p.x), ys=points.map(p=>+p.y), zs=points.map(p=>+p.z); const labels=points.map(p=>p.label||''); const labelsRen=renameOverlapLabels(xs,ys,zs,labels); const scores=points.map((p,i)=> scrScore(p._scr ?? xToSCR(ys[i]))*dcrScore(p._dcr ?? yToDCR(xs[i]))*fcrScore(p._fcr ?? zToFCR(zs[i])) ); const colors=scores.map(scoreToColor); const sizes=scaleLinear(scores); const textBold=labelsRen.map(l=> l?('<b>'+l+'</b>'):''); const halo={type:'scatter3d',mode:'text',x:xs,y:ys,z:zs,text:textBold,textposition:'bottom center',textfont:{size:16,color:'#fff'},hoverinfo:'skip',showlegend:false}; const text={type:'scatter3d',mode:'text',x:xs,y:ys,z:zs,text:textBold,textposition:'bottom center',textfont:{size:15,color:'#000'},hoverinfo:'skip',showlegend:false}; const pts={type:'scatter3d',mode:'markers',x:xs,y:ys,z:zs,text:labelsRen,marker:{size:sizes,color:colors,line:{width:1.5,color:'#000'},symbol:'circle'},customdata:scores,hovertemplate:'%{text}<br>x=%{x}<br>y=%{y}<br>z=%{z}<br>score=%{customdata}<extra></extra>'}; return [...buildXYBands(),...buildXZBands(),...buildYZBands(), ...buildXYGrid(),...buildXZGrid(),...buildYZGrid(), ...buildProjections(xs,ys,zs), buildExtraText(), halo, text, pts]; }
-      function render(initPts, tgtPts){ const layout=baseLayout(getCamera()); const cfg=PLOT_CONFIG; Plotly.newPlot(plotDivs[0], makeTraces(initPts||[]), layout, cfg); Plotly.newPlot(plotDivs[1], makeTraces(tgtPts||[]), layout, cfg); const total=(initPts&&initPts.length)||0; status(total?`Plotted ${total} point${total===1?'':'s'}.`:'No rows to plot.', !total); }
+      function render(initPts, tgtPts){ if(!window.Plotly) return; const layout=baseLayout(getCamera()); const cfg=PLOT_CONFIG; Plotly.newPlot(plotDivs[0], makeTraces(initPts||[]), layout, cfg); Plotly.newPlot(plotDivs[1], makeTraces(tgtPts||[]), layout, cfg); const total=(initPts&&initPts.length)||0; status(total?`Plotted ${total} point${total===1?'':'s'}.`:'No rows to plot.', !total); }
 
       // Build points from table rows
       function buildPointsFromRows(rows, target=false){ const pts=[]; rows.forEach((r,idx)=>{ if(!r.enabled) return; const scr=r.scr; const dcr=target? r.tdcr : r.dcr; const fcr=target? r.tfcr : r.fcr; const x=dcrPlot(dcr), y=scrPlot(scr), z=fcrPlot(fcr); if(x!=null&&y!=null&&z!=null){ pts.push({x,y,z,label:(r.id||indexToLetters(idx)), _scr:scr, _dcr:dcr, _fcr:fcr}); } }); return pts; }
@@ -407,15 +434,452 @@
       manualRebuildRows(5);
       manualCount.addEventListener('change', ()=>{ const prev=getManualRows(); const n=parseInt(manualCount.value,10)||1; manualRebuildRows(n, prev); renderFromTable(); });
 
-      // Comparative toggle: show/hide target cols and 2nd panel
-      function resizePlots(){ plotDivs.forEach(pd=>{ try{ Plotly.Plots.resize(pd); }catch(e){} }); }
+      // Toggles
+      function resizePlots(){ if(window.Plotly){ plotDivs.forEach(pd=>{ try{ Plotly.Plots.resize(pd); }catch(e){} }); } }
       function applyComparative(){ const on=!!comparativeToggle.checked; inputTable.classList.toggle('hide-target', !on); mainGrid.classList.toggle('two-panels', !on); requestAnimationFrame(()=>{ resizePlots(); applyCamera(); }); }
       comparativeToggle.addEventListener('change', applyComparative);
-      applyComparative(); // set initial state (default off -> two panels)
+      applyComparative(); // default off -> two panels
 
-      // Initial placeholder rows -> render
+      function applyTSRToggle(){ inputTable.classList.toggle('hide-tsr', !toggleTSR.checked); }
+      toggleTSR.addEventListener('change', applyTSRToggle);
+      applyTSRToggle();
+
+      // Initial render
       renderFromTable();
       window.addEventListener('resize', resizePlots);
+
+      // ===== Import/Export (CSV) =====
+      const btnExportCSV=document.getElementById('btnExportCSV');
+      const btnImportCSV=document.getElementById('btnImportCSV');
+      const fileInput=document.getElementById('fileInput');
+
+      function toCSVValue(v){
+        const s = String(v==null?'':v);
+        if(/[",\n]/.test(s)){ return '"'+s.replace(/"/g,'""')+'"'; }
+        return s;
+      }
+      function rowsToCSV(rows){
+        const header = ['ID','SCR','DCR','FCR','Score', 'TSR FoS', 'T-DCR','T-FCR', 'T-Score', 'T-TSR FoS'];
+        const lines = [header.join(',')];
+        rows.forEach(r=>{
+            const s1 = (r.scr && r.dcr && r.fcr) ? scrScore(r.scr)*dcrScore(r.dcr)*fcrScore(r.fcr) : '';
+            const s2 = (r.scr && r.tdcr && r.tfcr) ? scrScore(r.scr)*dcrScore(r.tdcr)*fcrScore(r.tfcr) : '';
+            const t1 = scoreToTSRFoS(s1);
+            const t2 = scoreToTSRFoS(s2);
+            lines.push([
+                toCSVValue((r.id||'').toUpperCase()),
+                toCSVValue(r.scr), toCSVValue(r.dcr), toCSVValue(r.fcr), toCSVValue(s1), toCSVValue(t1),
+                toCSVValue(r.tdcr), toCSVValue(r.tfcr), toCSVValue(s2), toCSVValue(t2)
+            ].join(','));
+        });
+        return lines.join('\n');
+      }
+      function exportTableDataCSV(){
+        const csv = rowsToCSV(getManualRows());
+        const blob = new Blob([csv], {type:'text/csv'});
+        const url = URL.createObjectURL(blob);
+        const a=document.createElement('a'); a.href=url; a.download='R3_Input_Data.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(url), 1000);
+      }
+
+      function parseCSV(text) {
+        const rows = [];
+        let i = 0, cur = '', inq = false, row = [];
+        const pushCell = () => { row.push(cur); cur = ''; };
+        const pushRow = () => {
+            if (cur !== '' || row.length) pushCell();
+            if (row.some(c => c !== '')) rows.push(row);
+            row = [];
+        };
+
+        while (i < text.length) {
+            const ch = text[i++];
+
+            if (inq) {
+            if (ch === '"') {
+                if (text[i] === '"') { cur += '"'; i++; } // escaped quote
+                else { inq = false; }
+            } else {
+                cur += ch;
+            }
+            } else {
+            if (ch === '"') inq = true;
+            else if (ch === ',') pushCell();
+            else if (ch === '\r' || ch === '\n') {        // handle CR, LF, CRLF
+                if (ch === '\r' && text[i] === '\n') i++;   // skip the LF in CRLF
+                pushRow();
+            } else {
+                cur += ch;
+            }
+            }
+        }
+        // flush last row
+        if (cur !== '' || row.length) {
+            pushCell();
+            if (row.some(c => c !== '')) rows.push(row);
+        }
+        return rows;
+        }
+
+        function csvToRows(csv) {
+        const arr = parseCSV(csv);
+        if (!arr.length) throw new Error('Empty CSV');
+
+        const header = arr[0].map(h => h.trim().toLowerCase());
+        const idx = (name) => header.indexOf(name);
+
+        const required = ['id','scr','dcr','fcr','t-dcr','t-fcr'];
+        const missing = required.filter(n => idx(n) < 0);
+        if (missing.length) {
+            throw new Error('Missing required headers: ' + missing.join(', '));
+        }
+
+        const [iId, iScr, iDcr, iFcr, iTdcr, iTfcr] = required.map(idx);
+        const iEnabled = idx('enabled'); // optional
+
+        const cell = (r, i) => String((i >= 0 ? r[i] : '') ?? '').trim();
+
+        return arr.slice(1)
+            .map(r => ({
+            id:   cell(r, iId).toUpperCase().slice(0, 4),
+            scr:  cell(r, iScr).toUpperCase(),
+            dcr:  cell(r, iDcr).toUpperCase(),
+            fcr:  cell(r, iFcr).toUpperCase(),
+            tdcr: cell(r, iTdcr).toUpperCase(),
+            tfcr: cell(r, iTfcr).toUpperCase(),
+            enabled: /^(1|true|yes|y)$/i.test(cell(r, iEnabled))
+            }))
+            .filter(o => o.id || o.scr || o.dcr || o.fcr || o.tdcr || o.tfcr);
+        }
+
+        function importTableDataCSV(text) {
+        try {
+            const rows = csvToRows(text);
+            const n = Math.max(1, Math.min(20, rows.length || 1));
+            manualCount.value = String(n);
+            manualRebuildRows(n);
+
+            const trs = [...manualBody.querySelectorAll('tr')];
+
+            rows.slice(0, n).forEach((r, i) => {
+            const tr = trs[i]; if (!tr) return;
+
+            const setChecked = (sel, val) => {
+                const el = tr.querySelector(sel);
+                if (el) el.checked = !!val;
+            };
+            const setValueIf = (sel, val, validator = () => true) => {
+                const el = tr.querySelector(sel);
+                if (el && validator(val)) el.value = val;
+            };
+
+            setChecked('.row-enable', true);
+            setValueIf('.row-id', (r.id || '').toUpperCase().slice(0, 4));
+
+            setValueIf('.sel-scr',  r.scr,  v => SCR_ORDER.includes(v));
+            setValueIf('.sel-dcr',  r.dcr,  v => DCR_ORDER.includes(v));
+            setValueIf('.sel-fcr',  r.fcr,  v => FCR_ORDER.includes(v));
+            setValueIf('.sel-tdcr', r.tdcr, v => DCR_ORDER.includes(v));
+            setValueIf('.sel-tfcr', r.tfcr, v => FCR_ORDER.includes(v));
+
+            updateRowScores(tr);
+            });
+
+            renderFromTable();
+            status('Imported table data (CSV).');
+        } catch (err) {
+            const msg = 'Import failed: ' + (err?.message || String(err));
+            status(msg, true);
+            alert(msg);
+        }
+        }
+
+      btnExportCSV.addEventListener('click', exportTableDataCSV);
+      btnImportCSV.addEventListener('click', ()=> fileInput.click());
+      fileInput.addEventListener('change', async (e)=>{
+        const file=e.target.files && e.target.files[0]; if(!file) return;
+        try{ const text=await file.text(); importTableDataCSV(text); }catch(err){ status('Import failed: '+err.message, true); alert('Import failed: '+err.message); }
+        finally{ fileInput.value=''; }
+      });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // ===== Export PDF (banners + main grid + bottom tables on one A4 landscape page) =====
+    const btnExportPDF = document.getElementById('btnExportPDF');
+
+    function sizeOf(el){
+    const r = el.getBoundingClientRect();
+    return { w: Math.max(1, r.width), h: Math.max(1, r.height) };
+    }
+
+    function makeImg(dataUrl, w, h){
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.style.width = w + 'px';
+    img.style.height = h + 'px';
+    img.style.display = 'block';
+    img.style.maxWidth = 'none';
+    img.style.maxHeight = 'none';
+    return img;
+    }
+
+    /** Swap common chart types for images; return a restore() fn. */
+    async function swapChartsForImages(root){
+    const swaps = [];
+
+    // --- Plotly ---
+    const plotlyNodes = Array.from(root.querySelectorAll('.js-plotly-plot'));
+    for (const el of plotlyNodes) {
+        try {
+        if (!window.Plotly) continue;
+        const { w, h } = sizeOf(el);
+        const uri = await window.Plotly.toImage(el, { format: 'png', width: Math.round(w), height: Math.round(h), scale: 2 });
+        const img = makeImg(uri, w, h);
+        el.parentNode.replaceChild(img, el);
+        swaps.push(()=>{ img.parentNode && img.parentNode.replaceChild(el, img); });
+        } catch {}
+    }
+
+    // --- Chart.js (v3+) ---
+    const canvases = Array.from(root.querySelectorAll('canvas'));
+    for (const cv of canvases) {
+        try {
+        let chart = null;
+        if (window.Chart && typeof window.Chart.getChart === 'function') {
+            chart = window.Chart.getChart(cv);
+        } else if (cv && cv._chart) {
+            chart = cv._chart; // older fallback
+        }
+        if (!chart) continue;
+        const { w, h } = sizeOf(cv);
+        const uri = chart.toBase64Image('image/png', 1); // Chart.js built-in
+        if (!uri) continue;
+        const img = makeImg(uri, w, h);
+        cv.parentNode.replaceChild(img, cv);
+        swaps.push(()=>{ img.parentNode && img.parentNode.replaceChild(cv, img); });
+        } catch {}
+    }
+
+    // --- ECharts ---
+    const echartsRoots = Array.from(root.querySelectorAll('[data-echarts-root], .echarts, .echart'));
+    for (const node of echartsRoots) {
+        try {
+        const inst = window.echarts && window.echarts.getInstanceByDom
+            ? window.echarts.getInstanceByDom(node)
+            : null;
+        if (!inst) continue;
+        const { w, h } = sizeOf(node);
+        const uri = inst.getDataURL({ type:'png', pixelRatio:2, backgroundColor:'#fff' });
+        const img = makeImg(uri, w, h);
+        node.parentNode.replaceChild(img, node);
+        swaps.push(()=>{ img.parentNode && img.parentNode.replaceChild(node, img); });
+        } catch {}
+    }
+
+    // --- Highcharts ---
+    const hcContainers = Array.from(root.querySelectorAll('.highcharts-container, .highcharts-root'));
+    for (const container of hcContainers) {
+        try {
+        if (!window.Highcharts || !Array.isArray(window.Highcharts.charts)) continue;
+        const chart = window.Highcharts.charts.find(c => c && (c.container === container || (c.renderTo && c.renderTo.contains(container))));
+        if (!chart) continue;
+        const base = chart.renderTo || container;
+        const { w, h } = sizeOf(base);
+        const svg = chart.getSVG();
+        const uri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        const img = makeImg(uri, w, h);
+        base.parentNode.replaceChild(img, base);
+        const orig = base;
+        swaps.push(()=>{ img.parentNode && img.parentNode.replaceChild(orig, img); });
+        } catch {}
+    }
+
+    // return restore
+    return () => { swaps.reverse().forEach(fn => { try { fn(); } catch {} }); };
+    }
+
+    // Clamp html2canvas size and prefer non-tainted path
+    async function captureElement(el, requestedScale = 2, maxSidePx = 8000, useFO = false) {
+    await document.fonts?.ready?.catch(()=>{});
+    await new Promise(r => requestAnimationFrame(() => setTimeout(r, 80)));
+
+    const rect = el.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    let scale = Math.min(requestedScale * dpr, maxSidePx / Math.max(rect.width, rect.height));
+    scale = Math.max(1, Math.min(scale, 3));
+
+    const canvas = await html2canvas(el, {
+        scale,
+        useCORS: true,
+        allowTaint: false,
+        foreignObjectRendering: useFO,
+        backgroundColor: '#ffffff',
+        imageTimeout: 0,
+        logging: false
+    });
+
+    // retry with FO if looks blank
+    const tiny = canvas.width < 10 || canvas.height < 10;
+    let blank = false;
+    try {
+        const ctx = canvas.getContext('2d');
+        const data = ctx.getImageData(0, 0, Math.min(10, canvas.width||1), Math.min(10, canvas.height||1)).data;
+        blank = !data || data.every(v => v === 0);
+    } catch { /* ignore */ }
+
+    if (!useFO && (tiny || blank)) {
+        return captureElement(el, requestedScale, maxSidePx, true);
+    }
+    return canvas.toDataURL('image/jpeg', 0.9);
+    }
+
+    const PX_PER_IN = 96;
+    const MM_PER_IN = 25.4;
+    const pxToMm = (px) => (px / PX_PER_IN) * MM_PER_IN;
+
+    async function exportPDF(){
+    try{
+      const { jsPDF } = window.jspdf;
+      const a4w = 297, a4h = 210; // landscape mm
+      const margin = 6;
+      const pageW = a4w - margin * 2;
+      const pageH = a4h - margin * 2;
+
+      // 10px gap between stacked panels (converted to mm)
+      const gapPx = 10;
+      const gapMmBase = pxToMm(gapPx);
+
+      // Reduce Tables panel by 25%
+      const tablesScaleRel = 0.75;
+
+      const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+
+      // Select banners
+      const logoEl    = document.querySelector('.logo');            // top banner 1 (fixed 70px height in PDF)
+      const banner2El = document.querySelector('.second-banner');   // top banner 2
+
+      // 1) Swap charts to images so plots render (content zones)
+      const restoreMain   = await swapChartsForImages(mainGrid);
+      const restoreTables = await swapChartsForImages(tablesPanel);
+
+      // 2) Capture areas
+      const [logoImg, banner2Img, mainGridImg, tablesImg] = await Promise.all([
+        logoEl    ? captureElement(logoEl, 2, 8000)    : Promise.resolve(null),
+        banner2El ? captureElement(banner2El, 2, 8000) : Promise.resolve(null),
+        captureElement(mainGrid, 2, 8000),
+        captureElement(tablesPanel, 2, 8000)
+      ]);
+
+      // 3) Restore DOM immediately
+      restoreMain(); restoreTables();
+
+      // 4) Compute sizes to fit ALL on one page
+      const props = (img) => img ? pdf.getImageProperties(img) : null;
+      const pLogo = props(logoImg);
+      const pB2   = props(banner2Img);
+      const p1    = pdf.getImageProperties(mainGridImg);
+      const p2    = pdf.getImageProperties(tablesImg);
+
+      // Scaling:
+      let logoW0 = 0, logoH0 = 0;
+      if (pLogo) {
+        const targetLogoHpx = 35;
+        logoH0 = pxToMm(targetLogoHpx);
+        logoW0 = logoH0 * (pLogo.width / pLogo.height);
+        if (logoW0 > pageW) { const k = pageW / logoW0; logoW0 *= k; logoH0 *= k; }
+      }
+
+      // - second banner uses full page width; height by aspect ratio
+      let b2W0 = 0, b2H0 = 0;
+      if (pB2) {
+        b2W0 = pageW;
+        b2H0 = b2W0 * (pB2.height / pB2.width);
+      }
+
+      // - main sections fill page width; heights by aspect ratio
+      const w1_0 = pageW, h1_0 = w1_0 * (p1.height / p1.width);
+
+      // tables panel at 75% relative size (both width and height)
+      const w2_0_full = pageW, h2_0_full = w2_0_full * (p2.height / p2.width);
+      const w2_0 = w2_0_full * tablesScaleRel;
+      const h2_0 = h2_0_full * tablesScaleRel;
+
+      // Gaps: between (logo→banner2 if both exist) + (banner2→main if banner2 exists OR logo exists) + (main→tables)
+      const items = [pLogo ? 'logo' : null, pB2 ? 'b2' : null, 'main', 'tables'].filter(Boolean);
+      const gapsCount = Math.max(0, items.length - 1);
+      const gapsTotalMm = gapsCount * gapMmBase;
+
+      // Total requested height (mm) before global scale
+      const totalWanted =
+        (pLogo ? logoH0 : 0) +
+        (pB2 ? b2H0 : 0) +
+        h1_0 + h2_0 +
+        gapsTotalMm;
+
+      // Uniform downscale if needed to fit pageH
+      const scale = totalWanted > pageH ? (pageH / totalWanted) : 1;
+
+      // Apply global scale
+      const logoW = logoW0 * scale, logoH = logoH0 * scale;
+      const b2W   = b2W0   * scale, b2H   = b2H0   * scale;
+      const w1    = w1_0   * scale, h1    = h1_0   * scale;
+      const w2    = w2_0   * scale, h2    = h2_0   * scale;
+      const gap   = gapMmBase * scale;
+
+      // 5) Draw centered horizontally, stacked from top margin with gaps
+      let y = margin;
+
+      if (pLogo) {
+        const xLogo = margin; // left-aligned at content left
+        pdf.addImage(logoImg, 'JPEG', xLogo, y, logoW, logoH);
+        y += logoH + gap;
+      }
+
+      if (pB2) {
+        const xB2 = (a4w - b2W) / 2;
+        pdf.addImage(banner2Img, 'JPEG', xB2, y, b2W, b2H);
+        y += b2H + gap;
+      }
+
+      const x1 = (a4w - w1) / 2;
+      pdf.addImage(mainGridImg, 'JPEG', x1, y, w1, h1);
+      y += h1 + gap;
+
+      const x2 = margin;
+      pdf.addImage(tablesImg, 'JPEG', x2, y, w2, h2);
+
+      // 6) Save
+      pdf.save('R3 Assessment.pdf');
+      status('Exported PDF.');
+    } catch (err) {
+      const msg = 'PDF export failed: ' + (err?.message || String(err));
+      status(msg, true);
+      alert(msg);
+    }
+  }
+
+    btnExportPDF.addEventListener('click', exportPDF);
+
+
     });
   </script>
 </body>
