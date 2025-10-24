@@ -69,6 +69,12 @@
     .id-input{ width:4.2em; text-transform:uppercase; }
     .select-cell, .select-header{ width:48px; text-align:center; }
 
+    /* Instructions panel */
+    .instructions-panel .instructions-body { font-weight:500; line-height:1.4; }
+    .instructions-panel .instructions-body p { margin: 0 0 10px; }
+    .instructions-panel .instructions-body ul,
+    .instructions-panel .instructions-body ol { margin: 0 0 0 18px; padding: 0; }
+
     /* Color classes (match bottom reference) */
     .palered { background:#FFCCCC; }
     .red { background:#FF7C80; }
@@ -95,6 +101,7 @@
       .control-group { grid-template-columns:repeat(2, minmax(0,1fr)); }
       .plot { min-height:420px; }
       .main-grid, .main-grid.two-panels { grid-template-columns:1fr; }
+      .tables-panel {grid-template-columns:1fr; }
       #panel-2 { display:block; }
     }
   </style>
@@ -132,6 +139,7 @@
           <div class="control"><label for="panZRange">Pan Vertical</label><input id="panZRange" type="range" min="-0.2" max="0.2" step="0.01" value="0" /></div>
         </div>
         <div class="actions">
+          <label class="toggle"><input type="checkbox" id="toggleSpheres" /> <span>Render points as spheres</span></label>
           <label class="toggle"><input type="checkbox" id="comparative" /> <span>Comparative Assessment</span></label>
           <label class="toggle"><input type="checkbox" id="toggleTSR" checked /> <span>Show TSR FoS</span></label>
           <button class="btn" id="btnImportCSV" title="Import table data from CSV">Import Data</button>
@@ -173,6 +181,38 @@
       </div>
     </div>
 
+    <div class="left-panel instructions-panel">
+      <div class="lp-banner">Instructions</div>
+      <div class="instructions-body">
+        <p>
+          The relative risk rating (R<sup>3</sup>) index is calculated as outlined in Chapter 6 of the LOP Guideline for Open Pit and Waste Dump Closure:
+          <b>R<sup>3</sup> = C<sub>f</sub> × C<sub>q</sub> × C<sub>l</sub></b>, where:
+        </p>
+        <ul>
+          <li><b>C<sub>f</sub></b> — design confidence rating (1–4)</li>
+          <li><b>C<sub>q</sub></b> — failure consequence rating (1–5)</li>
+          <li><b>C<sub>l</sub></b> — current slope class or required PMLU rating per the slope condition class or waste-dump/stockpile hazard classes (1–5)</li>
+        </ul>
+        <p></p>
+        <p>
+          Ranking for each rating is presented in the tables below. R<sup>3</sup> score classification and the suggested minimum target stability reliability (TSR) are also shown below.
+        </p>
+        <p><b>Steps to complete an R<sup>3</sup> assessment:</b></p>
+        <ol>
+          <li>Select the number of domains using the <b>Rows</b> dropdown at the top-right of the <b>Input Table</b> panel.</li>
+          <li>Enter an ID/label for each domain (up to 4 characters).</li>
+          <li>Select the <b>SCR</b> (Slope Condition Rating), <b>DCR</b> (Design Confidence Rating) and <b>FCR</b> (Failure Consequence Rating).</li>
+          <li>R<sup>3</sup> score, suggested minimum <b>TSR FoS</b> and the plot(s) update automatically.</li>
+          <li>Adjust the 3D plot view using the sliders in the <b>Controls</b> panel.</li>
+          <li>To assess target post-closure rankings, enable <b>Comparative Assessment</b> to choose target <b>DCR</b> and <b>FCR</b>. A side-by-side comparison plot is created for initial vs target assessments.</li>
+          <li>Hide the TSR columns in the table by turning off the <b>Show TSR FoS</b> toggle.</li>
+          <li>Enter data via dropdowns, or import pre-populated values from CSV with <b>Import Data</b>. Create a template CSV with <b>Export Data</b>.</li>
+          <li>Export plots and tables to PDF with <b>Export PDF</b>.</li>
+        </ol>
+      </div>
+    </div>
+
+
     <!-- Bottom reference tables -->
     <div class="tables-panel" id="tablesPanel">
       <table>
@@ -194,6 +234,7 @@
       </table>
     </div>
   </div>
+
 
   <script>
     const statusEl = document.getElementById('status');
@@ -419,7 +460,80 @@
       function scaleLinear(values){ const s_min=10, s_max=65; const mslope=(s_max - s_min)/99; const cint=s_min - mslope; return values.map(v => mslope*v + cint); }
       function buildProjections(xs,ys,zs){ const t=[], dash={width:1,color:'black',dash:'dot'}; {const x=[],y=[],z=[]; for(let i=0;i<xs.length;i++){ x.push(xs[i],xs[i],null); y.push(ys[i],ys[i],null); z.push(zs[i],5,null);} t.push({type:'scatter3d',mode:'lines',x,y,z,line:{...dash},hoverinfo:'skip',showlegend:false}); t.push({type:'scatter3d',mode:'markers',x:xs,y:ys,z:xs.map(()=>5),marker:{symbol:'x',size:1.5,color:'black'},hoverinfo:'skip',showlegend:false}); } {const x=[],y=[],z=[]; for(let i=0;i<xs.length;i++){ x.push(xs[i],xs[i],null); y.push(ys[i],5,null); z.push(zs[i],zs[i],null);} t.push({type:'scatter3d',mode:'lines',x,y,z,line:{...dash},hoverinfo:'skip',showlegend:false}); t.push({type:'scatter3d',mode:'markers',x:xs,y:xs.map(()=>5),z:zs,marker:{symbol:'x',size:1.5,color:'black'},hoverinfo:'skip',showlegend:false}); } {const x=[],y=[],z=[]; for(let i=0;i<xs.length;i++){ x.push(xs[i],5,null); y.push(ys[i],ys[i],null); z.push(zs[i],zs[i],null);} t.push({type:'scatter3d',mode:'lines',x,y,z,line:{...dash},hoverinfo:'skip',showlegend:false}); t.push({type:'scatter3d',mode:'markers',x:xs.map(()=>5),y:ys,z:zs,marker:{symbol:'x',size:1.5,color:'black'},hoverinfo:'skip',showlegend:false}); } return t; }
       function renameOverlapLabels(xs,ys,zs,labels){ const groups=new Map(); for(let i=0;i<xs.length;i++){ const key=`${xs[i]}|${ys[i]}|${zs[i]}`; const lbl=(labels[i]&&String(labels[i]).trim())?String(labels[i]).trim():indexToLetters(i); if(!groups.has(key)) groups.set(key, []); groups.get(key).push(lbl); } const combined=new Map(); groups.forEach((arr,key)=> combined.set(key, arr.join(', '))); return labels.map((_,i)=> combined.get(`${xs[i]}|${ys[i]}|${zs[i]}`)); }
-      function makeTraces(points){ if(!Array.isArray(points)||!points.length){ return [...buildXYBands(),...buildXZBands(),...buildYZBands(), ...buildXYGrid(),...buildXZGrid(),...buildYZGrid(), buildExtraText()]; } const xs=points.map(p=>+p.x), ys=points.map(p=>+p.y), zs=points.map(p=>+p.z); const labels=points.map(p=>p.label||''); const labelsRen=renameOverlapLabels(xs,ys,zs,labels); const scores=points.map((p,i)=> scrScore(p._scr ?? xToSCR(ys[i]))*dcrScore(p._dcr ?? yToDCR(xs[i]))*fcrScore(p._fcr ?? zToFCR(zs[i])) ); const colors=scores.map(scoreToColor); const sizes=scaleLinear(scores); const textBold=labelsRen.map(l=> l?('<b>'+l+'</b>'):''); const halo={type:'scatter3d',mode:'text',x:xs,y:ys,z:zs,text:textBold,textposition:'bottom center',textfont:{size:16,color:'#fff'},hoverinfo:'skip',showlegend:false}; const text={type:'scatter3d',mode:'text',x:xs,y:ys,z:zs,text:textBold,textposition:'bottom center',textfont:{size:15,color:'#000'},hoverinfo:'skip',showlegend:false}; const pts={type:'scatter3d',mode:'markers',x:xs,y:ys,z:zs,text:labelsRen,marker:{size:sizes,color:colors,line:{width:1.5,color:'#000'},symbol:'circle'},customdata:scores,hovertemplate:'%{text}<br>x=%{x}<br>y=%{y}<br>z=%{z}<br>score=%{customdata}<extra></extra>'}; return [...buildXYBands(),...buildXZBands(),...buildYZBands(), ...buildXYGrid(),...buildXZGrid(),...buildYZGrid(), ...buildProjections(xs,ys,zs), buildExtraText(), halo, text, pts]; }
+      
+
+      function makeTraces(points){
+        const bg=[...buildXYBands(),...buildXZBands(),...buildYZBands(),
+                  ...buildXYGrid(),...buildXZGrid(),...buildYZGrid(),
+                  buildExtraText()];
+
+        if(!Array.isArray(points) || !points.length){ return bg; }
+
+        // coords & labels
+        const xs = points.map(p=> +p.x);
+        const ys = points.map(p=> +p.y);
+        const zs = points.map(p=> +p.z);
+        const labels = points.map(p=> p.label || '');
+        const labelsRen = renameOverlapLabels(xs,ys,zs,labels);
+
+        // score used by existing scaling/colouring (fallback logic preserved)
+        const scores = points.map((p,i)=>
+          (Number.isFinite(p.score) ? p.score :
+            scrScore(p._scr ?? xToSCR(ys[i])) *
+            dcrScore(p._dcr ?? yToDCR(xs[i])) *
+            fcrScore(p._fcr ?? zToFCR(zs[i]))
+          )
+        );
+
+        // PRESERVE your size scaling & colouring
+        const sizesPx = points.map((p,i)=> Number.isFinite(p.sizePx) ? p.sizePx : scoreToSizePxLinear(scores[i], 1, 100, 10, 65));
+        const colors  = points.map((p,i)=> p.color || scoreToColor(scores[i]));
+
+        const traces=[...bg, ...buildProjections(xs,ys,zs)];
+
+        const asSpheres = document.getElementById('toggleSpheres')?.checked;
+
+        if (!asSpheres) {
+          // Standard marker points (unchanged behaviour)
+          traces.push({
+            type:'scatter3d', mode:'markers',
+            x:xs, y:ys, z:zs, text:labelsRen,
+            marker:{ size:sizesPx, color:colors, line:{width:1.5, color:'#000'}, symbol:'circle' },
+            customdata:scores,
+            hovertemplate:'%{text}<br>x=%{x}<br>y=%{y}<br>z=%{z}<br>score=%{customdata}<extra></extra>'
+          });
+          // label halo + text
+          traces.push({
+            type:'scatter3d', mode:'text', x:xs, y:ys, z:zs,
+            text:labelsRen.map(l=> l?('<b>'+l+'</b>'):''), textposition:'bottom center',
+            textfont:{size:16, color:'#fff'}, hoverinfo:'skip', showlegend:false
+          },{
+            type:'scatter3d', mode:'text', x:xs, y:ys, z:zs,
+            text:labelsRen.map(l=> l?('<b>'+l+'</b>'):''), textposition:'bottom center',
+            textfont:{size:15, color:'#000'}, hoverinfo:'skip', showlegend:false
+          });
+        } else {
+          // Sphere meshes: keep same colour & perceived size (convert px→radius)
+          for (let i=0;i<xs.length;i++){
+            const r = sizePxToRadius(sizesPx[i]);
+            traces.push(sphereMesh(xs[i], ys[i], zs[i], r, 14, 14, colors[i]));
+            if (labelsRen[i]) {
+              traces.push({
+                type:'scatter3d', mode:'text', x:xs, y:ys, z:zs,
+                text:labelsRen.map(l=> l?('<b>'+l+'</b>'):''), textposition:'bottom center',
+                textfont:{size:16, color:'#fff'}, hoverinfo:'skip', showlegend:false
+              },{
+                type:'scatter3d', mode:'text', x:xs, y:ys, z:zs,
+                text:labelsRen.map(l=> l?('<b>'+l+'</b>'):''), textposition:'bottom center',
+                textfont:{size:15, color:'#000'}, hoverinfo:'skip', showlegend:false
+              });
+            }
+          }
+        }
+
+        return traces;
+      }
+
       function render(initPts, tgtPts){ if(!window.Plotly) return; const layout=baseLayout(getCamera()); const cfg=PLOT_CONFIG; Plotly.newPlot(plotDivs[0], makeTraces(initPts||[]), layout, cfg); Plotly.newPlot(plotDivs[1], makeTraces(tgtPts||[]), layout, cfg); const total=(initPts&&initPts.length)||0; status(total?`Plotted ${total} point${total===1?'':'s'}.`:'No rows to plot.', !total); }
 
       // Build points from table rows
@@ -443,6 +557,54 @@
       function applyTSRToggle(){ inputTable.classList.toggle('hide-tsr', !toggleTSR.checked); }
       toggleTSR.addEventListener('change', applyTSRToggle);
       applyTSRToggle();
+
+      function sphereMesh(cx, cy, cz, r, seg=12, rings=12, color='#1f77b4') {
+        const xs=[], ys=[], zs=[], i=[], j=[], k=[];
+        for (let a=0; a<=rings; a++) {
+          const v=a*Math.PI/rings, sv=Math.sin(v), cv=Math.cos(v);
+          for (let b=0; b<=seg; b++) {
+            const u=b*2*Math.PI/seg;
+            xs.push(cx + r*Math.cos(u)*sv);
+            ys.push(cy + r*Math.sin(u)*sv);
+            zs.push(cz + r*cv);
+          }
+        }
+        const cols=seg+1;
+        for (let a=0; a<rings; a++) {
+          for (let b=0; b<seg; b++) {
+            const p=a*cols+b, q=p+cols;
+            // two triangles per quad
+            i.push(p,   p+1);
+            j.push(q,   q);
+            k.push(p+1, q+1);
+          }
+        }
+        return {
+          type:'mesh3d', x:xs, y:ys, z:zs, i, j, k, color,
+          opacity:0.5, showscale:false,
+          lighting:{ambient:0.4, diffuse:0.8, specular:0.3, roughness:0.9},
+          hoverinfo:'skip'
+        };
+      }
+      // map marker pixel size → approximate data-space radius (axes ~0–5)
+      function scoreToSizePxLinear(s, domainMin=1, domainMax=100, pxMin=2, pxMax=90){
+        const sNum = +s;
+        const sClamped = Math.max(domainMin, Math.min(domainMax, Number.isFinite(sNum) ? sNum : domainMin));
+        const t = (sClamped - domainMin) / (domainMax - domainMin); // 0..1
+        return pxMin + t * (pxMax - pxMin);
+      }
+      
+      function sizePxToRadius(px){
+        const pxMin = 2, pxMax = 90;
+        const t = Math.max(0, Math.min(1, (px - pxMin) / (pxMax - pxMin)));
+        return 0.01 + 0.82 * t; // r_min=0.02 (tiny), r_max≈0.57 (big)
+      }
+
+      // re-render when toggled (uses your existing renderFromTable)
+      document.getElementById('toggleSpheres')?.addEventListener('change', () => {
+        if (typeof renderFromTable === 'function') renderFromTable();
+      });
+
 
       // Initial render
       renderFromTable();
