@@ -6,14 +6,34 @@
   <title>Open Pit and Waste Dumps Closure — v3 (TSR, Import/Export, PDF)</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    body { margin: 0; font-family: 'Kommon Grotesk', Arial, sans-serif; background: #fff; color: #000; }
+    body { margin: 0; font-family: 'Kommon Grotesk', Arial, sans-serif; background: #fff; color: #000; flex-wrap:wrap;}
 
     /* Top banner */
-    .top-banner { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; margin:0 5%; border-bottom:1px solid #ddd; }
+    .top-banner { 
+      display:flex;                 /* ensure flex layout */
+      justify-content:space-between; 
+      align-items:center; 
+      padding:10px 20px; 
+      margin:0 5%; 
+      border-bottom:1px solid #ddd; 
+    }
     .logo { display:flex; align-items:center; }
     .logo .lop { color:#CA1416; font-size:42px; font-weight:700; font-family: Arial, Helvetica, sans-serif; margin-right:10px; }
-    .logo .project-text { color:grey; font-size:16px; font-weight:700; line-height:1.2; font-family:'Arazati Clara Condensada', 'Arial Narrow', sans-serif; }
-    .top-banner nav a { margin-left:20px; text-decoration:none; color:#000; font-size:14px; }
+    .logo .project-text { color:grey; font-size:16px; font-weight:700; line-height:1.2; font-family:'Arazati Clara Condensada','Arial Narrow',sans-serif; }
+
+    /* base: nav inline on the right */
+    .top-banner nav { 
+      display:flex; 
+      align-items:center; 
+      margin-left:auto;            /* push nav to the right */
+      gap:12px;
+    }
+    .top-banner nav a { 
+      display:flex; 
+      text-decoration:none; 
+      color:#000; 
+      font-size:14px; 
+    }
     .top-banner nav a:hover { text-decoration:underline; }
 
     /* Second banner */
@@ -98,6 +118,21 @@
 
     /* Responsive */
     @media (max-width: 1200px){
+      .top-banner{ align-items:flex-start; }
+      
+      .top-banner nav{
+        display:grid;
+        grid-template-columns:repeat(3, max-content); /* two columns */
+        justify-content:end;                          /* stick to right edge */
+        column-gap:12px;
+        row-gap:8px;
+      }
+      
+      .top-banner nav a{
+        margin:0;                  /* remove left margin when stacked */
+        justify-self:center;
+      }
+
       .control-group { grid-template-columns:repeat(2, minmax(0,1fr)); }
       .plot { min-height:420px; }
       .main-grid, .main-grid.two-panels { grid-template-columns:1fr; }
