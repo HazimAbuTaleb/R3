@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Open Pit and Waste Dumps Closure — v3 (TSR, Import/Export, PDF)</title>
+  <title>Open Pit and Waste Dumps Closure — Residual Risk Rating</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body { margin: 0; font-family: 'Kommon Grotesk', Arial, sans-serif; background: #fff; color: #000; flex-wrap:wrap;}
@@ -79,6 +79,10 @@
     .plot-title { padding:8px 10px; font-weight:700; border-bottom:1px solid #ddd; background:#efefef; display:flex; justify-content:space-between; align-items:center; }
     .plot { position:relative; width:100%; height:100%; min-height:640px; }
 
+    #panel-3 {
+      overflow-x: auto;
+    }
+
     /* Tables (bottom reference) */
     .tables-panel { width:100%; max-width:1300px; margin:0 auto; border:1px solid #ccc; border-radius:8px; background:#fafafa; padding:10px; display:grid; gap:20px; grid-template-columns:repeat(2, minmax(0,1fr)); align-items:start; }
 
@@ -89,11 +93,46 @@
     .id-input{ width:4.2em; text-transform:uppercase; }
     .select-cell, .select-header{ width:48px; text-align:center; }
 
+    /* Instructions Block */
+    .content-sections {
+      display: block;
+      gap: 16px;
+    }
+
+    .instructions-panel { grid-area: instructions; }
+    .definitions-panel  { grid-area: definitions; }
+
+    @media (min-width: 992px) {
+      .content-sections {
+        display: grid;
+        grid-template-columns: minmax(280px, 1fr) minmax(280px, 420px);
+        grid-template-areas: "instructions definitions";
+        gap: 16px;
+        align-items: start;
+      }
+    }
+
+    /* Definitions panel */
+    .definitions-panel .definitions-body { font-weight:500; line-height:1.4; }
+    .definitions-panel .definitions-body p { margin: 0 0 10px; }
+    .definitions-panel .definitions-body ul,
+    .definitions-panel .definitions-body ol { margin: 0 0 0 18px; padding: 0; }
+    .definitions-panel .definitions-body { width: auto; }
+
+    .definitions-table {width: 100%;  border-collapse: collapse; margin-top: 8px;}
+    .definitions-table th,
+    .definitions-table td {border: 1px solid #ccc;  padding: 6px 10px;  text-align: left; font-weight: 400;}
+    .definitions-table th {  background-color: #f2f2f2 }
+    .definitions-table td:first-child,
+    .definitions-table th:first-child { text-align: center; white-space: nowrap; width: 1%;}
+    .definitions-table { width: 100%; }
+
     /* Instructions panel */
     .instructions-panel .instructions-body { font-weight:500; line-height:1.4; }
     .instructions-panel .instructions-body p { margin: 0 0 10px; }
     .instructions-panel .instructions-body ul,
     .instructions-panel .instructions-body ol { margin: 0 0 0 18px; padding: 0; }
+    .instructions-panel { margin-bottom: 16px; }
 
     /* Color classes (match bottom reference) */
     .palered { background:#FFCCCC; }
@@ -159,7 +198,7 @@
 
   <div class="second-banner">
     <h1 class="text">Open Pit and Waste Dumps Closure</h1>
-    <div class="subtext">Target Risk Rating (R3)</div>
+    <div class="subtext">Residual Risk Rating (R<sup>3</sup>)</div>
   </div>
 
   <div class="main-body">
@@ -170,7 +209,7 @@
         <div class="control-group">
           <div class="control"><label for="azimRange">Rotation</label><input id="azimRange" type="range" min="-90" max="0" step="1" value="-30" /></div>
           <div class="control"><label for="elevRange">Tilt</label><input id="elevRange" type="range" min="1" max="89" step="1" value="15" /></div>
-          <div class="control"><label for="zoomRange">Zoom</label><input id="zoomRange" type="range" min="-1" max="1" step="0.1" value="0" /></div>
+          <div class="control"><label for="zoomRange">Zoom</label><input id="zoomRange" type="range" min="-1" max="1" step="0.1" value="-1" /></div>
           <div class="control"><label for="panZRange">Pan Vertical</label><input id="panZRange" type="range" min="-0.2" max="0.2" step="0.01" value="0" /></div>
         </div>
         <div class="actions">
@@ -202,7 +241,7 @@
             <tr>
               <th rowspan="2" class="select-header"><input id="checkAll" type="checkbox" /></th>
               <th rowspan="2">ID</th>
-              <th rowspan="2">SCR</th>
+              <th rowspan="2">SCCR</th>
               <th colspan="4">Initial Assessment</th>
               <th colspan="4">Target Assessment</th>
             </tr>
@@ -216,37 +255,69 @@
       </div>
     </div>
 
-    <div class="left-panel instructions-panel">
-      <div class="lp-banner">Instructions</div>
-      <div class="instructions-body">
-        <p>
-          The relative risk rating (R<sup>3</sup>) index is calculated as outlined in Chapter 6 of the LOP Guideline for Open Pit and Waste Dump Closure:
-          <b>R<sup>3</sup> = C<sub>f</sub> × C<sub>q</sub> × C<sub>l</sub></b>, where:
-        </p>
-        <ul>
-          <li><b>C<sub>f</sub></b> — design confidence rating (1–4)</li>
-          <li><b>C<sub>q</sub></b> — failure consequence rating (1–5)</li>
-          <li><b>C<sub>l</sub></b> — current slope class or required PMLU rating per the slope condition class or waste-dump/stockpile hazard classes (1–5)</li>
-        </ul>
-        <p></p>
-        <p>
-          Ranking for each rating is presented in the tables below. R<sup>3</sup> score classification and the suggested minimum target stability reliability (TSR) are also shown below.
-        </p>
-        <p><b>Steps to complete an R<sup>3</sup> assessment:</b></p>
-        <ol>
-          <li>Select the number of domains using the <b>Rows</b> dropdown at the top-right of the <b>Input Table</b> panel.</li>
-          <li>Enter an ID/label for each domain (up to 4 characters).</li>
-          <li>Select the <b>SCR</b> (Slope Condition Rating), <b>DCR</b> (Design Confidence Rating) and <b>FCR</b> (Failure Consequence Rating).</li>
-          <li>R<sup>3</sup> score, suggested minimum <b>TSR FoS</b> and the plot(s) update automatically.</li>
-          <li>Adjust the 3D plot view using the sliders in the <b>Controls</b> panel.</li>
-          <li>To assess target post-closure rankings, enable <b>Comparative Assessment</b> to choose target <b>DCR</b> and <b>FCR</b>. A side-by-side comparison plot is created for initial vs target assessments.</li>
-          <li>Hide the TSR columns in the table by turning off the <b>Show TSR FoS</b> toggle.</li>
-          <li>Enter data via dropdowns, or import pre-populated values from CSV with <b>Import Data</b>. Create a template CSV with <b>Export Data</b>.</li>
-          <li>Export plots and tables to PDF with <b>Export PDF</b>.</li>
-        </ol>
+    <div class="content-sections">
+      <div class="left-panel instructions-panel">
+        <div class="lp-banner">Instructions</div>
+        <div class="instructions-body">
+          <p>
+            The relative risk rating (R<sup>3</sup>) index is calculated as outlined in Chapter 6 of the LOP Guideline for Open Pit and Waste Dump Closure:
+            <b>R<sup>3</sup> = C<sub>f</sub> × C<sub>q</sub> × C<sub>l</sub></b>, where:
+          </p>
+          <ul>
+            <li><b>C<sub>f</sub></b> — design confidence rating (1–4)</li>
+            <li><b>C<sub>q</sub></b> — failure consequence rating (1–5)</li>
+            <li><b>C<sub>l</sub></b> — current slope class or required PMLU rating per the slope condition class or waste-dump/stockpile hazard classes (1–5)</li>
+          </ul>
+          <p>
+            Ranking for each rating is presented in the tables below. R<sup>3</sup> score classification and the suggested minimum target stability reliability (TSR) are also shown below.
+          </p>
+          <p><b>Steps to complete an R<sup>3</sup> assessment:</b></p>
+          <ol>
+            <li>Select the number of domains using the <b>Rows</b> dropdown at the top-right of the <b>Input Table</b> panel.</li>
+            <li>Enter an ID/label for each domain (up to 4 characters).</li>
+            <li>Select the <b>SCCR</b> (Slope Condition Rating), <b>DCR</b> (Design Confidence Rating) and <b>FCR</b> (Failure Consequence Rating).</li>
+            <li>R<sup>3</sup> score, suggested minimum <b>TSR FoS</b> and the plot(s) update automatically.</li>
+            <li>Adjust the 3D plot view using the sliders in the <b>Controls</b> panel.</li>
+            <li>To assess target post-closure rankings, enable <b>Comparative Assessment</b> to choose target <b>DCR</b> and <b>FCR</b>. A side-by-side comparison plot is created for initial vs target assessments.</li>
+            <li>Hide the TSR columns in the table by turning off the <b>Show TSR FoS</b> toggle.</li>
+            <li>Enter data via dropdowns, or import pre-populated values from CSV with <b>Import Data</b>. Create a template CSV with <b>Export Data</b>.</li>
+            <li>Export plots and tables to PDF with <b>Export PDF</b>.</li>
+          </ol>
+        </div>
       </div>
-    </div>
+    
+    
+      <div class="left-panel definitions-panel">
+          <div class="lp-banner">Definitions</div>
+          <div class="definitions-body">
+            <table class="definitions-table">
+              <thead>
+                <tr>
+                  <th>Abbreviation</th>
+                  <th>Definition</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>R<sup>3</sup></td><td>Relative Risk Rating</td></tr>
+                <tr><td>ESR</td><td>Environmental and Social Risk</td></tr>
+                <tr><td>SCCR</td><td>Slope Condition Class Rating</td></tr>
+                <tr><td>DCR</td><td>Design Confidence Rating</td></tr>
+                <tr><td>FCR</td><td>Failure Consequence Rating</td></tr>
+                <tr><td>TSR</td><td>Target Stability Reliability</td></tr>
+                <tr><td>FoS</td><td>Factor of Safety</td></tr>
+                <tr><td>PoF</td><td>Probability of Failure</td></tr>
+                <tr><td>PMLU</td><td>Proposed/Planned Mine Land Use</td></tr>
+                <tr><td>VL</td><td>Very Low</td></tr>
+                <tr><td>L</td><td>Low</td></tr>
+                <tr><td>M</td><td>Medium</td></tr>
+                <tr><td>H</td><td>High</td></tr>
+                <tr><td>VH</td><td>Very High</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
+    </div>
 
     <!-- Bottom reference tables -->
     <div class="tables-panel" id="tablesPanel">
@@ -296,7 +367,7 @@
       const zoomRange=document.getElementById('zoomRange');
       const panZRange=document.getElementById('panZRange');
 
-      azimRange.value='-30'; elevRange.value='15'; zoomRange.value='0'; panZRange.value='0';
+      azimRange.value='-30'; elevRange.value='15'; zoomRange.value='-1'; panZRange.value='0';
 
       function sphericalToEye(azimDeg,elevDeg,r){ const th=azimDeg*Math.PI/180, ph=elevDeg*Math.PI/180; return {x:r*Math.cos(ph)*Math.cos(th), y:r*Math.cos(ph)*Math.sin(th), z:r*Math.sin(ph)}; }
       function getCamera(){ const az=-Number(azimRange.value), el=Number(elevRange.value), r=1.6-Number(zoomRange.value); return { eye:sphericalToEye(az,el,r), up:{x:0,y:0,z:1}, center:{x:0,y:0,z:-0.1-Number(panZRange.value)} } }
@@ -347,7 +418,7 @@
           [-0.5,2.5,5.25,'III'],
           [-0.5,3.5,5.25,'IV'],
           [-0.5,4.5,5.25,'V'],
-          [-1.75,2.5,5.55,'Slope\nCondition\nClass']];
+          [-2,2.5,5.75,'Slope\nCondition\nClass']];
 
         const texts=pts.map(p=>String(p[3]));
         const sizes=texts.map(t=> (t.replace(/<br>/g,'\n').length>3?14:12));
@@ -455,14 +526,14 @@
 
           const makeSel=(opts,val,cls)=>{ const s=document.createElement('select'); s.className=cls; opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);}); s.value = val || opts[0]; return s; };
 
-          // Initial SCR/DCR/FCR/Score/TSR
+          // Initial SCCR/DCR/FCR/Score/TSR
           td=document.createElement('td'); td.className='td-scr'; const scrSel=makeSel(SCR_ORDER, data.scr||'I','sel-scr'); td.appendChild(scrSel); tr.appendChild(td);
           td=document.createElement('td'); td.className='td-dcr'; const dcrSel=makeSel(DCR_ORDER, data.dcr||'VH','sel-dcr'); td.appendChild(dcrSel); tr.appendChild(td);
           td=document.createElement('td'); td.className='td-fcr'; const fcrSel=makeSel(FCR_ORDER, data.fcr||'VL','sel-fcr'); td.appendChild(fcrSel); tr.appendChild(td);
           td=document.createElement('td'); td.className='td-score'; const sc1=document.createElement('span'); sc1.className='score-initial'; td.appendChild(sc1); tr.appendChild(td);
           td=document.createElement('td'); td.className='col-tsr td-tsr'; const tsr1=document.createElement('span'); tsr1.className='tsr-initial'; td.appendChild(tsr1); tr.appendChild(td);
 
-          // Target DCR/FCR/Score/TSR (SCR shared)
+          // Target DCR/FCR/Score/TSR (SCCR shared)
           td=document.createElement('td'); td.className='td-tdcr tgt-group'; const tdcrSel=makeSel(DCR_ORDER, data.tdcr||dcrSel.value,'sel-tdcr'); td.appendChild(tdcrSel); tr.appendChild(td);
           td=document.createElement('td'); td.className='td-tfcr tgt-group'; const tfcrSel=makeSel(FCR_ORDER, data.tfcr||fcrSel.value,'sel-tfcr'); td.appendChild(tfcrSel); tr.appendChild(td);
           td=document.createElement('td'); td.className='td-tscore tgt-group'; const sc2=document.createElement('span'); sc2.className='score-target'; td.appendChild(sc2); tr.appendChild(td);
@@ -656,7 +727,7 @@
         return s;
       }
       function rowsToCSV(rows){
-        const header = ['ID','SCR','DCR','FCR','Score', 'TSR FoS', 'T-DCR','T-FCR', 'T-Score', 'T-TSR FoS'];
+        const header = ['ID','SCCR','DCR','FCR','Score', 'TSR FoS', 'T-DCR','T-FCR', 'T-Score', 'T-TSR FoS'];
         const lines = [header.join(',')];
         rows.forEach(r=>{
             const s1 = (r.scr && r.dcr && r.fcr) ? scrScore(r.scr)*dcrScore(r.dcr)*fcrScore(r.fcr) : '';
@@ -724,7 +795,7 @@
         const header = arr[0].map(h => h.trim().toLowerCase());
         const idx = (name) => header.indexOf(name);
 
-        const required = ['id','scr','dcr','fcr','t-dcr','t-fcr'];
+        const required = ['id','sccr','dcr','fcr','t-dcr','t-fcr'];
         const missing = required.filter(n => idx(n) < 0);
         if (missing.length) {
             throw new Error('Missing required headers: ' + missing.join(', '));
